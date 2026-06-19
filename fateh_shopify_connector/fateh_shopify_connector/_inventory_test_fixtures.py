@@ -64,7 +64,6 @@ def ensure_test_shopify_store(**overrides) -> "frappe.model.document.Document":
 			{
 				"doctype": "Shopify Store",
 				"shop_domain": domain,
-				"auth_method": "OAuth",
 				"company": TEST_COMPANY,
 				"enabled": 1,
 				"enable_inventory_sync": 1,
@@ -79,7 +78,6 @@ def ensure_test_shopify_store(**overrides) -> "frappe.model.document.Document":
 	store.company = TEST_COMPANY
 	if not store.api_version:
 		store.api_version = "2024-01"
-	store.auth_method = "OAuth"
 
 	# Apply caller overrides
 	for key, value in (overrides or {}).items():

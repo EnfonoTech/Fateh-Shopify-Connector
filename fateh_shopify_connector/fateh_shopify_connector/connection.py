@@ -83,7 +83,7 @@ def shopify_session(shopify_store: str | Document | None = None, allow_implicit:
 			# Set store context
 			frappe.flags.shopify_store = store.name
 
-			# Get auth details - supports both Legacy and OAuth methods
+			# Get auth details for OAuth session
 			api_version = store.api_version or DEFAULT_API_VERSION
 			access_token = get_access_token(store)
 			auth_details = (store.shop_domain, api_version, access_token)

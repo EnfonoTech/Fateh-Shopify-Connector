@@ -80,20 +80,9 @@ bench --site [sitename] migrate
 
 ## Authentication
 
-The connector supports two authentication methods:
+OAuth 2.0 is the only supported authentication method. Shopify deprecated legacy private apps from January 2026.
 
-### Legacy (Access Token)
-Manual access token entry for existing custom apps created before January 2026.
-
-> **Note:** Shopify deprecated legacy custom apps from 1 January 2026. New integrations should use OAuth.
-
-1. Create a Custom App in Shopify Admin > Settings > Apps and sales channels > Develop apps
-2. Configure required API scopes
-3. Install the app and copy the Admin API access token
-4. Enter the token in the Shopify Store's `Access Token` field
-
-### OAuth 2.0 (Recommended)
-OAuth flow for Shopify Dev Dashboard apps, required for new apps created after January 2026.
+### OAuth 2.0
 
 ```
 Fateh Store Form -> Shopify Auth Page -> Fateh Callback -> Token stored on Shopify Store doc
@@ -114,12 +103,11 @@ The OAuth flow is self-contained within the Shopify Store document.
 
 **Step 2: Configure Shopify Store in ERPNext**
 1. Create/edit a Shopify Store document
-2. Set `Auth Method` = "OAuth"
-3. Enter the **Client ID** and **Client Secret** from Shopify
-4. Copy the **Callback URL** shown on the form to your Shopify app's redirect URIs
-5. Click **Actions > Connect to Shopify**
-6. Authorise on Shopify when redirected
-7. Verify status shows "Connected"
+2. Enter the **Client ID** and **Client Secret** from Shopify
+3. Copy the **Callback URL** shown on the form to your Shopify app's redirect URIs
+4. Click **Actions > Connect to Shopify**
+5. Authorise on Shopify when redirected
+6. Verify status shows "Connected"
 
 All required scopes are requested automatically during the OAuth flow:
 - `read_orders`, `write_orders`
@@ -134,7 +122,6 @@ All required scopes are requested automatically during the OAuth flow:
 1. Navigate to **Shopify Store** DocType
 2. Create a new store with:
    - Shop domain (e.g., `mystore.myshopify.com`)
-   - Authentication method (Legacy or OAuth)
    - Company mapping
    - Warehouse and location mappings
 3. Configure tax settings:

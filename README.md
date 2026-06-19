@@ -1,10 +1,8 @@
-# ERPNext Shopify Connector
+# Fateh Shopify Connector
 
 Multi-store Shopify connector for ERPNext, designed to connect multiple Shopify stores to a single ERPNext instance with multi-company support. Built and maintained by [Enfono](https://enfono.com/).
 
 > Works with any ERPNext v15+ instance. No additional dependencies beyond ERPNext.
-
-![Multi-Store Architecture](docs/multi-store-architecture.svg)
 
 ## Key Features
 
@@ -33,8 +31,8 @@ Map ERPNext field values (item group, brand, etc.) to Shopify Custom Collections
 ### Payment Method Mapping
 Map Shopify payment gateways to ERPNext Mode of Payment for accurate payment tracking.
 
-### OAuth 2.0 and Legacy Auth
-Supports modern OAuth flow (recommended for new integrations) and legacy access tokens for existing custom apps.
+### OAuth 2.0
+Full OAuth 2.0 flow — authorize directly from the Shopify Store form. Shopify deprecated legacy private apps from January 2026; all new integrations use OAuth.
 
 ### SKU-Based Migration Tool
 Link existing Shopify products to ERPNext items by matching SKUs. Generates a report of matched, unmatched, and conflicting items.
@@ -42,13 +40,20 @@ Link existing Shopify products to ERPNext items by matching SKUs. Generates a re
 ### Item Eligibility Filters
 Control which items sync to which stores using manual overrides or automatic filter rules (e.g., "if field X has value, sync to store Y").
 
-## Data Flow
-
-![Data Flow](docs/data-flow.svg)
-
 ## Documentation
 
+Full documentation: **[fateh-shopify-connector-docs.vercel.app](https://fateh-shopify-connector-docs.vercel.app)**
+
 - [Developer Guide](docs/developer-guide.md)
+
+## Installation
+
+```bash
+cd $PATH_TO_YOUR_BENCH
+bench get-app https://github.com/EnfonoTech/Fateh-Shopify-Connector.git --branch version-15
+bench --site [sitename] install-app fateh_shopify_connector
+bench --site [sitename] migrate
+```
 
 ## License
 

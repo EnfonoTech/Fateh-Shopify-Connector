@@ -132,7 +132,6 @@ def ensure_test_shopify_store_with_payment_mapping(**overrides) -> "Document":
 			{
 				"doctype": "Shopify Store",
 				"shop_domain": domain,
-				"auth_method": "OAuth",
 				"company": TEST_COMPANY,
 				"enabled": 1,
 				"api_version": "2024-01",
@@ -146,7 +145,6 @@ def ensure_test_shopify_store_with_payment_mapping(**overrides) -> "Document":
 	store.company = TEST_COMPANY
 	if not store.api_version:
 		store.api_version = "2024-01"
-	store.auth_method = "OAuth"
 	store.auto_create_invoice = 1
 	store.auto_create_payment_entry = 1
 
