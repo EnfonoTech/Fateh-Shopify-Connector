@@ -57,4 +57,4 @@ bench --site [sitename] migrate
 
 ## License
 
-MIT License — Copyright (c) 2024 siva@enfono.com
+MIT License — Copyright (c) 2026 siva@enfono.com
