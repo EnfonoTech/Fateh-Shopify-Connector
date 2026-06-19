@@ -1,25 +1,83 @@
 app_name = "fateh_shopify_connector"
 app_title = "Fateh Shopify Connector"
-app_publisher = "siva"
-app_description = "Shopify connector for ERPNext"
+app_publisher = "Enfono"
+app_description = "Multi-store Shopify connector for ERPNext"
 app_email = "siva@enfono.com"
 app_license = "mit"
 
-# Apps
+# Required Apps
 # ------------------
+required_apps = ["frappe", "erpnext"]
 
-# required_apps = []
+# Fixtures
+# ------------------
+fixtures = [
+	{
+		"doctype": "Custom Field",
+		"filters": [
+			[
+				"name",
+				"in",
+				[
+					# Item fields
+					"Item-shopify_stores_section",
+					"Item-shopify_stores",
+					# Customer fields
+					"Customer-shopify_customer_id",
+					# Sales Order fields
+					"Sales Order-shopify_section",
+					"Sales Order-shopify_store",
+					"Sales Order-shopify_order_id",
+					"Sales Order-shopify_order_number",
+					"Sales Order-shopify_financial_status",
+					"Sales Order-shopify_fulfillment_status",
+					"Sales Order-shopify_customer_note",
+					# Sales Order Item fields
+					"Sales Order Item-shopify_item_discount",
+					# Delivery Note fields
+					"Delivery Note-shopify_section",
+					"Delivery Note-shopify_store",
+					"Delivery Note-shopify_order_id",
+					"Delivery Note-shopify_order_number",
+					"Delivery Note-shopify_fulfillment_id",
+					"Delivery Note-shopify_customer_note",
+					# Sales Invoice fields
+					"Sales Invoice-shopify_section",
+					"Sales Invoice-shopify_store",
+					"Sales Invoice-shopify_order_id",
+					"Sales Invoice-shopify_order_number",
+					"Sales Invoice-shopify_customer_note",
+					# Contact Phone fields
+					"Contact Phone-shopify_original_phone",
+				],
+			]
+		],
+	}
+]
 
-# Each item in the list will be shown as an app in the apps page
-# add_to_apps_screen = [
-# 	{
-# 		"name": "fateh_shopify_connector",
-# 		"logo": "/assets/fateh_shopify_connector/logo.png",
-# 		"title": "Fateh Shopify Connector",
-# 		"route": "/fateh_shopify_connector",
-# 		"has_permission": "fateh_shopify_connector.api.permission.has_app_permission"
-# 	}
-# ]
+# Document Events
+# ---------------
+# Hook on document methods and events
+
+doc_events = {
+	"Item": {
+		"on_update": "fateh_shopify_connector.fateh_shopify_connector.product.sync_item_to_shopify",
+		"after_insert": "fateh_shopify_connector.fateh_shopify_connector.product.sync_item_to_shopify",
+	},
+	"Item Price": {
+		"on_update": "fateh_shopify_connector.fateh_shopify_connector.product.sync_item_price_to_shopify",
+		"after_insert": "fateh_shopify_connector.fateh_shopify_connector.product.sync_item_price_to_shopify",
+	},
+}
+
+# Scheduled Tasks
+# ---------------
+
+scheduler_events = {
+	"cron": {
+		"*/10 * * * *": ["fateh_shopify_connector.fateh_shopify_connector.inventory.update_inventory_on_shopify"],
+	},
+}
 
 # Includes in <head>
 # ------------------
@@ -43,7 +101,7 @@ app_license = "mit"
 # page_js = {"page" : "public/js/file.js"}
 
 # include js in doctype views
-# doctype_js = {"doctype" : "public/js/doctype.js"}
+doctype_js = {"Item": "public/js/item.js"}
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
@@ -133,39 +191,6 @@ app_license = "mit"
 # 	"ToDo": "custom_app.overrides.CustomToDo"
 # }
 
-# Document Events
-# ---------------
-# Hook on document methods and events
-
-# doc_events = {
-# 	"*": {
-# 		"on_update": "method",
-# 		"on_cancel": "method",
-# 		"on_trash": "method"
-# 	}
-# }
-
-# Scheduled Tasks
-# ---------------
-
-# scheduler_events = {
-# 	"all": [
-# 		"fateh_shopify_connector.tasks.all"
-# 	],
-# 	"daily": [
-# 		"fateh_shopify_connector.tasks.daily"
-# 	],
-# 	"hourly": [
-# 		"fateh_shopify_connector.tasks.hourly"
-# 	],
-# 	"weekly": [
-# 		"fateh_shopify_connector.tasks.weekly"
-# 	],
-# 	"monthly": [
-# 		"fateh_shopify_connector.tasks.monthly"
-# 	],
-# }
-
 # Testing
 # -------
 
@@ -236,9 +261,12 @@ app_license = "mit"
 # ]
 
 # Automatically update python controller files with type annotations for this app.
-# export_python_type_annotations = True
+export_python_type_annotations = True
 
-# default_log_clearing_doctypes = {
-# 	"Logging DocType Name": 30  # days to retain logs
-# }
+default_log_clearing_doctypes = {
+	"Fateh Shopify Log": 30  # days to retain logs
+}
 
+# Doctypes to exclude from deletion when a Company is deleted
+# -----------------------------------------------------------
+company_data_to_be_ignored = ["Shopify Store"]

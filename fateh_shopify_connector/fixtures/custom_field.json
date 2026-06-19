@@ -1,0 +1,241 @@
+[
+	{
+		"doctype": "Custom Field",
+		"name": "Item-shopify_stores_section",
+		"dt": "Item",
+		"fieldname": "shopify_stores_section",
+		"fieldtype": "Section Break",
+		"insert_after": "uoms",
+		"label": "Shopify Stores"
+	},
+	{
+		"doctype": "Custom Field",
+		"name": "Item-shopify_stores",
+		"dt": "Item",
+		"fieldname": "shopify_stores",
+		"fieldtype": "Table",
+		"insert_after": "shopify_stores_section",
+		"label": "Shopify Stores",
+		"options": "Item Shopify Store"
+	},
+	{
+		"doctype": "Custom Field",
+		"name": "Customer-shopify_customer_id",
+		"dt": "Customer",
+		"fieldname": "shopify_customer_id",
+		"fieldtype": "Data",
+		"insert_after": "customer_name",
+		"label": "Shopify Customer ID",
+		"read_only": 1,
+		"depends_on": "eval:doc.shopify_customer_id"
+	},
+	{
+		"doctype": "Custom Field",
+		"name": "Sales Order-shopify_section",
+		"dt": "Sales Order",
+		"fieldname": "shopify_section",
+		"fieldtype": "Section Break",
+		"insert_after": "amended_from",
+		"label": "Shopify",
+		"depends_on": "eval:doc.shopify_order_id",
+		"collapsible": 1
+	},
+	{
+		"doctype": "Custom Field",
+		"name": "Sales Order-shopify_store",
+		"dt": "Sales Order",
+		"fieldname": "shopify_store",
+		"fieldtype": "Link",
+		"insert_after": "shopify_section",
+		"label": "Shopify Store",
+		"options": "Shopify Store",
+		"read_only": 1
+	},
+	{
+		"doctype": "Custom Field",
+		"name": "Sales Order-shopify_order_id",
+		"dt": "Sales Order",
+		"fieldname": "shopify_order_id",
+		"fieldtype": "Data",
+		"insert_after": "shopify_store",
+		"label": "Shopify Order ID",
+		"read_only": 1
+	},
+	{
+		"doctype": "Custom Field",
+		"name": "Sales Order-shopify_order_number",
+		"dt": "Sales Order",
+		"fieldname": "shopify_order_number",
+		"fieldtype": "Data",
+		"insert_after": "shopify_order_id",
+		"label": "Shopify Order Number",
+		"read_only": 1
+	},
+	{
+		"doctype": "Custom Field",
+		"name": "Delivery Note-shopify_section",
+		"dt": "Delivery Note",
+		"fieldname": "shopify_section",
+		"fieldtype": "Section Break",
+		"insert_after": "return_against",
+		"label": "Shopify",
+		"depends_on": "eval:doc.shopify_order_id",
+		"collapsible": 1
+	},
+	{
+		"doctype": "Custom Field",
+		"name": "Delivery Note-shopify_store",
+		"dt": "Delivery Note",
+		"fieldname": "shopify_store",
+		"fieldtype": "Link",
+		"insert_after": "shopify_section",
+		"label": "Shopify Store",
+		"options": "Shopify Store",
+		"read_only": 1
+	},
+	{
+		"doctype": "Custom Field",
+		"name": "Delivery Note-shopify_order_id",
+		"dt": "Delivery Note",
+		"fieldname": "shopify_order_id",
+		"fieldtype": "Data",
+		"insert_after": "shopify_store",
+		"label": "Shopify Order ID",
+		"read_only": 1
+	},
+	{
+		"doctype": "Custom Field",
+		"name": "Delivery Note-shopify_order_number",
+		"dt": "Delivery Note",
+		"fieldname": "shopify_order_number",
+		"fieldtype": "Data",
+		"insert_after": "shopify_order_id",
+		"label": "Shopify Order Number",
+		"read_only": 1
+	},
+	{
+		"doctype": "Custom Field",
+		"name": "Delivery Note-shopify_fulfillment_id",
+		"dt": "Delivery Note",
+		"fieldname": "shopify_fulfillment_id",
+		"fieldtype": "Data",
+		"insert_after": "shopify_order_number",
+		"label": "Shopify Fulfillment ID",
+		"read_only": 1
+	},
+	{
+		"doctype": "Custom Field",
+		"name": "Delivery Note-shopify_customer_note",
+		"dt": "Delivery Note",
+		"fieldname": "shopify_customer_note",
+		"fieldtype": "Small Text",
+		"insert_after": "shopify_fulfillment_id",
+		"label": "Shopify Customer Note",
+		"read_only": 1
+	},
+	{
+		"doctype": "Custom Field",
+		"name": "Sales Invoice-shopify_section",
+		"dt": "Sales Invoice",
+		"fieldname": "shopify_section",
+		"fieldtype": "Section Break",
+		"insert_after": "amended_from",
+		"label": "Shopify",
+		"depends_on": "eval:doc.shopify_order_id",
+		"collapsible": 1
+	},
+	{
+		"doctype": "Custom Field",
+		"name": "Sales Invoice-shopify_store",
+		"dt": "Sales Invoice",
+		"fieldname": "shopify_store",
+		"fieldtype": "Link",
+		"insert_after": "shopify_section",
+		"label": "Shopify Store",
+		"options": "Shopify Store",
+		"read_only": 1
+	},
+	{
+		"doctype": "Custom Field",
+		"name": "Sales Invoice-shopify_order_id",
+		"dt": "Sales Invoice",
+		"fieldname": "shopify_order_id",
+		"fieldtype": "Data",
+		"insert_after": "shopify_store",
+		"label": "Shopify Order ID",
+		"read_only": 1
+	},
+	{
+		"doctype": "Custom Field",
+		"name": "Sales Invoice-shopify_order_number",
+		"dt": "Sales Invoice",
+		"fieldname": "shopify_order_number",
+		"fieldtype": "Data",
+		"insert_after": "shopify_order_id",
+		"label": "Shopify Order Number",
+		"read_only": 1
+	},
+	{
+		"doctype": "Custom Field",
+		"name": "Sales Invoice-shopify_customer_note",
+		"dt": "Sales Invoice",
+		"fieldname": "shopify_customer_note",
+		"fieldtype": "Small Text",
+		"insert_after": "shopify_order_number",
+		"label": "Shopify Customer Note",
+		"read_only": 1
+	},
+	{
+		"doctype": "Custom Field",
+		"name": "Sales Order-shopify_financial_status",
+		"dt": "Sales Order",
+		"fieldname": "shopify_financial_status",
+		"fieldtype": "Select",
+		"insert_after": "shopify_order_number",
+		"label": "Shopify Financial Status",
+		"options": "\nauthorized\nexpired\npaid\npartially_paid\npartially_refunded\npending\nrefunded\nvoided",
+		"read_only": 1
+	},
+	{
+		"doctype": "Custom Field",
+		"name": "Sales Order-shopify_fulfillment_status",
+		"dt": "Sales Order",
+		"fieldname": "shopify_fulfillment_status",
+		"fieldtype": "Select",
+		"insert_after": "shopify_financial_status",
+		"label": "Shopify Fulfillment Status",
+		"options": "\nfulfilled\nnot_eligible\npartial\nunfulfilled",
+		"read_only": 1
+	},
+	{
+		"doctype": "Custom Field",
+		"name": "Sales Order-shopify_customer_note",
+		"dt": "Sales Order",
+		"fieldname": "shopify_customer_note",
+		"fieldtype": "Small Text",
+		"insert_after": "shopify_fulfillment_status",
+		"label": "Shopify Customer Note",
+		"read_only": 1
+	},
+	{
+		"doctype": "Custom Field",
+		"name": "Sales Order Item-shopify_item_discount",
+		"dt": "Sales Order Item",
+		"fieldname": "shopify_item_discount",
+		"fieldtype": "Currency",
+		"insert_after": "discount_amount",
+		"label": "Shopify Item Discount",
+		"read_only": 1
+	},
+	{
+		"doctype": "Custom Field",
+		"name": "Contact Phone-shopify_original_phone",
+		"dt": "Contact Phone",
+		"fieldname": "shopify_original_phone",
+		"fieldtype": "Data",
+		"insert_after": "phone",
+		"label": "Shopify Original Phone",
+		"read_only": 1,
+		"description": "Original phone from Shopify (stored when sanitization was required)"
+	}
+]

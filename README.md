@@ -1,33 +1,55 @@
-### Fateh Shopify Connector
+# ERPNext Shopify Connector
 
-Shopify connector for ERPNext
+Multi-store Shopify connector for ERPNext, designed to connect multiple Shopify stores to a single ERPNext instance with multi-company support. Built and maintained by [Enfono](https://enfono.com/).
 
-### Installation
+> Works with any ERPNext v15+ instance. No additional dependencies beyond ERPNext.
 
-You can install this app using the [bench](https://github.com/frappe/bench) CLI:
+![Multi-Store Architecture](docs/multi-store-architecture.svg)
 
-```bash
-cd $PATH_TO_YOUR_BENCH
-bench get-app $URL_OF_THIS_REPO --branch develop
-bench install-app fateh_shopify_connector
-```
+## Key Features
 
-### Contributing
+### Multi-Store, Multi-Company
+Connect multiple Shopify stores to one ERPNext instance, each mapped to a separate company for proper accounting separation.
 
-This app uses `pre-commit` for code formatting and linting. Please [install pre-commit](https://pre-commit.com/#installation) and enable it for this repository:
+### Real-Time Order Sync
+Webhook-based order ingestion with HMAC validation. Orders are automatically routed to the correct company based on store configuration. Supports automatic submission, invoicing, and payment entry creation for paid orders.
 
-```bash
-cd apps/fateh_shopify_connector
-pre-commit install
-```
+### Fulfillment Sync
+Listens to Shopify fulfillment webhooks and automatically creates Delivery Notes with tracking information. Handles partial fulfillments and prevents duplicates.
 
-Pre-commit is configured to use the following tools for checking and formatting your code:
+### Product and Inventory Push
+Sync items from ERPNext to Shopify with configurable field mapping (standard fields and metafields). Push stock levels from ERPNext warehouses to Shopify locations with multi-location support.
 
-- ruff
-- eslint
-- prettier
-- pyupgrade
+### Configurable Tax Handling
+- "On Net Total" approach for clean, efficient tax calculation
+- Automatic zero-rated item detection with item tax template overrides
+- Multi-region support (NZ 15% GST, AU 10% GST, and others)
+- Shipping tax handling (as line item or separate tax row)
+- Automatic rounding adjustments for Shopify/ERPNext total matching
 
-### License
+### Collection Mapping
+Map ERPNext field values (item group, brand, etc.) to Shopify Custom Collections for automatic product categorization during sync.
 
-mit
+### Payment Method Mapping
+Map Shopify payment gateways to ERPNext Mode of Payment for accurate payment tracking.
+
+### OAuth 2.0 and Legacy Auth
+Supports modern OAuth flow (recommended for new integrations) and legacy access tokens for existing custom apps.
+
+### SKU-Based Migration Tool
+Link existing Shopify products to ERPNext items by matching SKUs. Generates a report of matched, unmatched, and conflicting items.
+
+### Item Eligibility Filters
+Control which items sync to which stores using manual overrides or automatic filter rules (e.g., "if field X has value, sync to store Y").
+
+## Data Flow
+
+![Data Flow](docs/data-flow.svg)
+
+## Documentation
+
+- [Developer Guide](docs/developer-guide.md)
+
+## License
+
+MIT License — Copyright (c) 2024 siva@enfono.com

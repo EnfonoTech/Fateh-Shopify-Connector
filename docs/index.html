@@ -1,0 +1,914 @@
+<title>Fateh Shopify Connector — Documentation</title>
+<style>
+:root {
+  --ground:    #0B1422;
+  --surface:   #111E30;
+  --surface2:  #162638;
+  --text:      #C8D8E8;
+  --dim:       #6A8BAA;
+  --accent:    #F7931E;
+  --cyan:      #00C2D4;
+  --green:     #34C759;
+  --red:       #FF453A;
+  --border:    #1A3352;
+  --code-bg:   #0A1520;
+  --sw:        232px;
+  --font:      'Segoe UI', system-ui, -apple-system, sans-serif;
+  --mono:      'Consolas', 'Courier New', monospace;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;font-size:15px}
+body{background:var(--ground);color:var(--text);font-family:var(--font);line-height:1.7;display:flex;min-height:100vh}
+
+/* ── SIDEBAR ── */
+.sidebar{width:var(--sw);position:fixed;top:0;left:0;height:100vh;background:var(--surface);border-right:1px solid var(--border);overflow-y:auto;display:flex;flex-direction:column;z-index:50}
+.sb-brand{padding:22px 20px 18px;border-bottom:1px solid var(--border)}
+.sb-title{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);line-height:1.3}
+.sb-sub{font-size:11px;color:var(--dim);margin-top:3px}
+.nav-cat{font-size:9.5px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);padding:12px 20px 4px}
+.nav-a{display:block;padding:6px 20px;font-size:13px;color:var(--dim);text-decoration:none;border-left:2px solid transparent;transition:color .15s,border-color .15s,background .15s}
+.nav-a:hover{color:var(--text);background:rgba(255,255,255,.03)}
+.nav-a.active{color:var(--accent);border-left-color:var(--accent);background:rgba(247,147,30,.06)}
+.nav-a.sub{padding-left:32px;font-size:12px}
+.sb-foot{margin-top:auto;padding:14px 20px;border-top:1px solid var(--border);font-size:11px;color:var(--dim)}
+.sb-foot a{color:var(--accent);text-decoration:none}
+a:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:2px}
+
+/* ── MAIN ── */
+.main{margin-left:var(--sw);flex:1;min-width:0}
+
+/* ── HERO ── */
+.hero{padding:56px 60px 48px;border-bottom:1px solid var(--border)}
+.hero-tag{display:inline-flex;align-items:center;gap:10px;font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-bottom:20px}
+.hero-tag::before{content:'';display:block;width:24px;height:2px;background:var(--accent);border-radius:1px}
+.hero h1{font-size:38px;font-weight:800;color:#fff;letter-spacing:-.025em;line-height:1.1;max-width:680px;margin-bottom:16px}
+.hero-desc{font-size:16px;color:var(--dim);max-width:580px;line-height:1.65;margin-bottom:28px}
+.hero-chips{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:40px}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border:1px solid var(--border);border-radius:20px;font-size:11.5px;color:var(--dim);background:var(--surface)}
+.chip .dot{width:6px;height:6px;border-radius:50%;background:var(--accent);flex-shrink:0}
+.chip .dot.cyan{background:var(--cyan)} .chip .dot.green{background:var(--green)}
+.flow-wrap{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;position:relative}
+.flow-label{position:absolute;top:10px;left:14px;font-size:9.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
+#flowCanvas{display:block;width:100%}
+
+/* ── CONTENT ── */
+.content{padding:0 60px}
+.section{padding:52px 0;border-bottom:1px solid var(--border)}
+.section:last-of-type{border-bottom:none}
+.eyebrow{font-size:10px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);margin-bottom:8px}
+.section h2{font-size:26px;font-weight:800;color:#fff;letter-spacing:-.02em;line-height:1.2;margin-bottom:14px}
+.section-lead{font-size:15px;color:var(--dim);max-width:660px;line-height:1.7;margin-bottom:32px}
+.step-header{display:flex;align-items:flex-start;gap:16px;margin-bottom:24px}
+.step-circle{width:40px;height:40px;border-radius:50%;background:rgba(247,147,30,.1);border:1.5px solid rgba(247,147,30,.4);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:var(--accent);font-family:var(--mono);flex-shrink:0;margin-top:4px}
+.step-title-wrap .eyebrow{margin-bottom:4px}
+
+/* ── FEATURE GRID ── */
+.feat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.feat-card{background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:22px;transition:border-color .2s}
+.feat-card:hover{border-color:rgba(247,147,30,.45)}
+.feat-icon{width:28px;height:28px;margin-bottom:14px;color:var(--accent)}
+.feat-icon.cyan-icon{color:var(--cyan)}
+.feat-card h3{font-size:14px;font-weight:700;color:#fff;margin-bottom:6px}
+.feat-card p{font-size:12.5px;color:var(--dim);line-height:1.6}
+
+/* ── TABLES ── */
+.tbl-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:7px;margin-bottom:20px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead tr{border-bottom:1px solid var(--border)}
+th{text-align:left;padding:10px 18px;font-size:9.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);white-space:nowrap;background:var(--surface2)}
+td{padding:12px 18px;border-bottom:1px solid rgba(26,51,82,.5);vertical-align:top;line-height:1.5}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(255,255,255,.02)}
+.badge{display:inline-block;padding:2px 7px;border-radius:3px;font-size:11px;font-weight:600;font-family:var(--mono);white-space:nowrap}
+.b-orange{background:rgba(247,147,30,.15);color:var(--accent)}
+.b-cyan{background:rgba(0,194,212,.15);color:var(--cyan)}
+.b-green{background:rgba(52,199,89,.15);color:var(--green)}
+.b-dim{background:rgba(106,139,170,.1);color:var(--dim)}
+.b-req{background:rgba(255,69,58,.15);color:#FF6961}
+.b-opt{background:rgba(106,139,170,.12);color:var(--dim)}
+.b-auto{background:rgba(0,194,212,.12);color:var(--cyan)}
+.bold{font-weight:700;color:var(--text)} .dim{color:var(--dim);font-size:12px}
+code{font-family:var(--mono);font-size:11.5px;background:rgba(0,194,212,.1);color:var(--cyan);padding:1px 5px;border-radius:3px}
+
+/* ── CODE BLOCK ── */
+.code-block,.code{background:var(--code-bg);border:1px solid var(--border);border-radius:7px;padding:20px 24px;font-family:var(--mono);font-size:12.5px;color:#9BBCD8;overflow-x:auto;line-height:1.8;margin-bottom:16px}
+.code-block .cmd,.code .cmd{color:var(--accent)} .code-block .str,.code .str{color:var(--cyan)} .code-block .cmt,.code .cmt{color:var(--dim)} .code-block .kw,.code .kw{color:#C792EA}
+
+/* ── SIMPLE STEP LIST ── */
+.steps{display:flex;flex-direction:column;gap:18px;margin-top:24px}
+.step{display:flex;gap:18px;align-items:flex-start}
+.step-num{flex-shrink:0;width:30px;height:30px;border-radius:50%;background:rgba(247,147,30,.1);border:1px solid rgba(247,147,30,.3);display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:800;color:var(--accent);font-family:var(--mono)}
+.step h4{font-size:14px;font-weight:700;color:#fff;margin-bottom:3px}
+.step p{font-size:12.5px;color:var(--dim);line-height:1.6}
+
+/* ── STEP FLOW (guide) ── */
+.step-flow{display:flex;flex-direction:column;gap:0;margin-bottom:24px}
+.sf-item{display:flex;gap:0}
+.sf-spine{display:flex;flex-direction:column;align-items:center;width:40px;flex-shrink:0}
+.sf-bullet{width:28px;height:28px;border-radius:50%;background:rgba(247,147,30,.12);border:1.5px solid rgba(247,147,30,.35);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:var(--accent);font-family:var(--mono);z-index:1}
+.sf-line{width:1.5px;flex:1;background:rgba(247,147,30,.2);min-height:16px}
+.sf-last .sf-line{display:none}
+.sf-body{padding:2px 0 20px 14px;flex:1}
+.sf-body h4{font-size:13.5px;font-weight:700;color:#fff;margin-bottom:4px}
+.sf-body p{font-size:12.5px;color:var(--dim);line-height:1.6}
+
+/* ── AUTH CARDS ── */
+.auth-card{background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:24px;margin-bottom:20px}
+.auth-card h3{font-size:15px;font-weight:700;color:#fff;margin-bottom:10px}
+.auth-card p{font-size:12.5px;color:var(--dim);line-height:1.6;margin-bottom:14px}
+.auth-card ul{padding-left:18px}
+.auth-card li{font-size:12.5px;color:var(--dim);line-height:1.8}
+
+/* ── PERMISSIONS ── */
+.perm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-top:24px}
+.perm-card{background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:18px}
+.perm-role{font-size:13px;font-weight:700;color:#fff;margin-bottom:10px}
+.perm-item{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--dim);margin-bottom:4px}
+.perm-item::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--dim);flex-shrink:0}
+.perm-item.ok::before{background:var(--green)}
+
+/* ── ARCH TREE ── */
+.arch-tree{background:var(--code-bg);border:1px solid var(--border);border-radius:7px;padding:24px;font-family:var(--mono);font-size:12px;line-height:1.9;color:var(--dim);overflow-x:auto;margin-top:24px}
+.at-dir{color:#fff;font-weight:600} .at-file{color:var(--cyan)} .at-cmt{color:rgba(106,139,170,.55)}
+
+/* ── WEBHOOK ROWS ── */
+.webhook-list{margin-top:24px;border:1px solid var(--border);border-radius:7px;overflow:hidden}
+.wh-row{display:grid;grid-template-columns:210px 1fr;gap:16px;padding:14px 18px;border-bottom:1px solid rgba(26,51,82,.5);font-size:12.5px;align-items:start}
+.wh-row:last-child{border-bottom:none}
+.wh-row:hover{background:rgba(255,255,255,.015)}
+.wh-event{font-family:var(--mono);color:var(--cyan);font-size:12px}
+.wh-handler{font-family:var(--mono);color:var(--dim);font-size:11.5px;line-height:1.5}
+
+/* ── SCHED CARD ── */
+.sched-card{background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:18px 22px;display:flex;align-items:center;gap:16px;margin-top:20px}
+.sched-cron{font-family:var(--mono);font-size:14px;color:var(--accent);font-weight:700;white-space:nowrap}
+.sched-sep{width:1px;height:36px;background:var(--border);flex-shrink:0}
+.sched-fn{font-family:var(--mono);font-size:11.5px;color:var(--cyan)}
+.sched-desc{font-size:12.5px;color:var(--dim);margin-top:3px}
+
+/* ── TASK LIST ── */
+.task-list{display:flex;flex-direction:column;gap:12px;margin-bottom:24px}
+.task{display:flex;gap:14px;align-items:flex-start;padding:16px 18px;background:var(--surface);border:1px solid var(--border);border-radius:7px}
+.task:hover{border-color:rgba(247,147,30,.3)}
+.task-icon{width:30px;height:30px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.task-icon.orange{background:rgba(247,147,30,.12)} .task-icon.cyan{background:rgba(0,194,212,.12)} .task-icon.green{background:rgba(52,199,89,.12)}
+.task-body strong{font-size:13.5px;color:#fff;display:block;margin-bottom:3px}
+.task-body p{font-size:12.5px;color:var(--dim);line-height:1.6}
+.task-body code{font-family:var(--mono);font-size:11.5px;background:rgba(0,194,212,.1);color:var(--cyan);padding:1px 5px;border-radius:3px}
+
+/* ── INFO BOX ── */
+.info-box{border-radius:7px;padding:16px 20px;margin-bottom:20px;display:flex;gap:14px;align-items:flex-start;font-size:13.5px;line-height:1.6}
+.info-box.tip{background:rgba(0,194,212,.08);border:1px solid rgba(0,194,212,.2)}
+.info-box.warn{background:rgba(247,147,30,.08);border:1px solid rgba(247,147,30,.25)}
+.info-box.note{background:rgba(106,139,170,.07);border:1px solid var(--border)}
+.info-box.success{background:rgba(52,199,89,.08);border:1px solid rgba(52,199,89,.25)}
+.info-icon{font-size:16px;flex-shrink:0;margin-top:1px}
+.info-box .ib-body{flex:1}
+.info-box strong{color:#fff}
+
+/* ── SCOPE GRID ── */
+.scope-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;margin-bottom:20px}
+.scope-item{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:5px;font-family:var(--mono);font-size:12px;color:var(--cyan)}
+.scope-item::before{content:'✓';color:var(--green);font-weight:800;font-family:var(--font)}
+
+/* ── SCREENSHOT MOCK ── */
+.screenshot{border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:20px}
+.ss-bar{background:var(--surface2);padding:10px 16px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border)}
+.ss-dot{width:9px;height:9px;border-radius:50%}
+.ss-url{font-size:11.5px;color:var(--dim);font-family:var(--mono);margin-left:8px}
+.ss-body{padding:20px 24px;display:flex;flex-direction:column;gap:10px}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:10px}
+.field-group{display:flex;flex-direction:column;gap:4px}
+.ss-label{font-size:11px;color:var(--dim);margin-bottom:4px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.ss-field{height:34px;border:1px solid var(--border);border-radius:5px;background:var(--surface2);margin-bottom:10px;padding:0 12px;display:flex;align-items:center}
+.ss-field-val{font-size:12.5px;color:var(--text);font-family:var(--mono)}
+.ss-field-placeholder{font-size:12.5px;color:var(--dim)}
+
+/* ── VERIFY GRID ── */
+.verify-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+.v-card{background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:18px}
+.v-card.pass{border-color:rgba(52,199,89,.3)} .v-card.fail{border-color:rgba(255,69,58,.25)}
+.v-badge{display:inline-block;font-size:10px;font-weight:800;padding:2px 8px;border-radius:3px;margin-bottom:8px;letter-spacing:.04em}
+.vb-pass{background:rgba(52,199,89,.15);color:var(--green)} .vb-fail{background:rgba(255,69,58,.12);color:#FF6961}
+.v-title{font-size:12.5px;font-weight:700;color:#fff;margin-bottom:6px}
+.v-desc{font-size:12px;color:var(--dim);line-height:1.6}
+
+/* ── TROUBLESHOOT ── */
+.ts-item{border:1px solid var(--border);border-radius:7px;overflow:hidden;margin-bottom:10px}
+.ts-q{padding:14px 18px;background:var(--surface);font-size:13.5px;font-weight:600;color:#fff;display:flex;justify-content:space-between;align-items:center}
+.ts-q::after{content:'›';color:var(--dim);font-size:18px;transform:rotate(90deg);display:block}
+.ts-a{padding:14px 18px;font-size:13px;color:var(--dim);line-height:1.7;border-top:1px solid var(--border)}
+
+/* ── CHECKLIST ── */
+.checklist{display:flex;flex-direction:column;gap:8px;margin-bottom:24px}
+.cl-item{display:flex;gap:10px;align-items:flex-start;font-size:13.5px}
+.cl-check{width:18px;height:18px;border-radius:4px;border:1.5px solid rgba(52,199,89,.4);background:rgba(52,199,89,.1);display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--green);flex-shrink:0;margin-top:2px;font-weight:800}
+
+/* ── DIVIDER ── */
+.guide-divider{padding:28px 0 0;margin-bottom:0;border-top:3px solid rgba(247,147,30,.2);display:flex;align-items:center;gap:16px}
+.guide-divider-label{font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);white-space:nowrap}
+.guide-divider-line{flex:1;height:1px;background:var(--border)}
+
+/* ── FOOTER ── */
+footer{padding:28px 60px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;font-size:11.5px;color:var(--dim)}
+footer a{color:var(--accent);text-decoration:none}
+
+/* ── RESPONSIVE ── */
+@media(max-width:860px){
+  .sidebar{display:none} .main{margin-left:0}
+  .hero,.content,footer{padding-left:20px;padding-right:20px}
+  .hero{padding-top:36px}
+  .feat-grid{grid-template-columns:1fr}
+  .wh-row{grid-template-columns:1fr;gap:4px}
+  .section{padding:36px 0}
+  .verify-grid,.field-row{grid-template-columns:1fr}
+}
+</style>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" aria-label="Documentation navigation">
+  <div class="sb-brand">
+    <div class="sb-title">Fateh Shopify Connector</div>
+    <div class="sb-sub">v15.1.0 · ERPNext App</div>
+  </div>
+  <nav aria-label="Main">
+    <div class="nav-cat">Overview</div>
+    <a class="nav-a" href="#overview">Introduction</a>
+    <a class="nav-a" href="#features">Features</a>
+
+    <div class="nav-cat">Reference</div>
+    <a class="nav-a" href="#doctypes">DocTypes</a>
+    <a class="nav-a" href="#custom-fields">Custom Fields</a>
+    <a class="nav-a" href="#webhooks">Webhook Events</a>
+    <a class="nav-a" href="#permissions">Permissions</a>
+
+    <div class="nav-cat">Developer</div>
+    <a class="nav-a" href="#architecture">Architecture</a>
+    <a class="nav-a" href="#installation">Installation</a>
+    <a class="nav-a" href="#authentication">Authentication</a>
+
+    <div class="nav-cat">Setup Guide</div>
+    <a class="nav-a" href="#prerequisites">Prerequisites</a>
+    <a class="nav-a sub" href="#step1">1 · Create Shopify App</a>
+    <a class="nav-a sub" href="#step2">2 · Create Store Doc</a>
+    <a class="nav-a sub" href="#step3">3 · Connect OAuth</a>
+    <a class="nav-a sub" href="#step4">4 · Map Warehouses</a>
+    <a class="nav-a sub" href="#step5">5 · Configure Taxes</a>
+    <a class="nav-a sub" href="#step6">6 · Order Settings</a>
+    <a class="nav-a sub" href="#step7">7 · Register Webhooks</a>
+    <a class="nav-a sub" href="#step8">8 · Enable &amp; Test</a>
+    <a class="nav-a" href="#troubleshoot">Troubleshooting</a>
+  </nav>
+  <div class="sb-foot">
+    MIT License · <a href="mailto:siva@enfono.com">siva@enfono.com</a>
+  </div>
+</aside>
+
+<main class="main">
+
+<!-- HERO -->
+<section class="hero" id="overview">
+  <div class="hero-tag">Fateh Shopify Connector · v15.1.0</div>
+  <h1>Every order, item, and stock level — in sync.</h1>
+  <p class="hero-desc">A multi-store Shopify integration for ERPNext. Any number of Shopify stores connect to one ERPNext instance, each mapped to its own company, with real-time webhooks and configurable automation.</p>
+  <div class="hero-chips">
+    <span class="chip"><span class="dot"></span>ERPNext v15+</span>
+    <span class="chip"><span class="dot"></span>Multi-store</span>
+    <span class="chip"><span class="dot cyan"></span>OAuth 2.0</span>
+    <span class="chip"><span class="dot green"></span>MIT License</span>
+    <span class="chip"><span class="dot"></span>siva@enfono.com</span>
+  </div>
+  <div class="flow-wrap">
+    <span class="flow-label">Live Data Flow</span>
+    <canvas id="flowCanvas" height="160"></canvas>
+  </div>
+</section>
+
+<div class="content">
+
+<!-- FEATURES -->
+<section class="section" id="features">
+  <div class="eyebrow">Capabilities</div>
+  <h2>What the connector does</h2>
+  <p class="section-lead">Ten integrated features covering the full Shopify → ERPNext lifecycle, from order ingestion to inventory pushback.</p>
+  <div class="feat-grid">
+    <div class="feat-card">
+      <svg class="feat-icon" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="14" r="5"/><circle cx="21" cy="14" r="5"/><path d="M14 14h0"/></svg>
+      <h3>Multi-Store, Multi-Company</h3>
+      <p>Connect unlimited Shopify stores to one ERPNext instance. Each store maps to a separate company for clean accounting separation.</p>
+    </div>
+    <div class="feat-card">
+      <svg class="feat-icon" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h20M4 14h14M4 20h10"/><circle cx="22" cy="20" r="3"/></svg>
+      <h3>Real-Time Order Sync</h3>
+      <p>Webhook-based ingestion with HMAC validation. Orders route to the correct company automatically. Supports auto-submit, invoicing, and payment entry creation.</p>
+    </div>
+    <div class="feat-card">
+      <svg class="feat-icon" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="20" height="20" rx="2"/><path d="M10 14l3 3 5-6"/></svg>
+      <h3>Fulfillment → Delivery Notes</h3>
+      <p>Shopify fulfillment webhooks create Delivery Notes with tracking numbers. Handles partial fulfillments and prevents duplicate DNs.</p>
+    </div>
+    <div class="feat-card">
+      <svg class="feat-icon" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10l10-6 10 6v10l-10 6-10-6z"/><path d="M14 4v16M4 10l10 6 10-6"/></svg>
+      <h3>Product &amp; Inventory Push</h3>
+      <p>Sync ERPNext items to Shopify with configurable field mapping (standard fields and metafields). Push stock levels with multi-location support via GraphQL batching.</p>
+    </div>
+    <div class="feat-card">
+      <svg class="feat-icon" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22L22 6M9 6h-3v3M22 19v3h-3"/></svg>
+      <h3>Configurable Tax Handling</h3>
+      <p>On-Net-Total tax approach, zero-rated item detection, per-store tax account mapping, and automatic rounding adjustments so ERPNext totals match Shopify exactly.</p>
+    </div>
+    <div class="feat-card">
+      <svg class="feat-icon" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h20M4 12h14M4 18h8"/><path d="M20 15l4 4-4 4"/></svg>
+      <h3>Collection Mapping</h3>
+      <p>Map ERPNext field values (item group, brand, etc.) to Shopify Custom Collections. Optionally auto-create collections for unmapped values.</p>
+    </div>
+    <div class="feat-card">
+      <svg class="feat-icon cyan-icon" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="14" height="9" rx="1.5"/><path d="M21 11h4M21 15h3M17 11.5V15"/><circle cx="8" cy="18" r="1.5"/><circle cx="14" cy="18" r="1.5"/></svg>
+      <h3>Payment Method Mapping</h3>
+      <p>Map Shopify payment gateways to ERPNext Mode of Payment. Payment entries fail fast if a gateway isn't mapped — no silent mismatches.</p>
+    </div>
+    <div class="feat-card">
+      <svg class="feat-icon cyan-icon" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="5" width="18" height="18" rx="3"/><path d="M10 14l2 2 6-6"/></svg>
+      <h3>OAuth 2.0 Authorization</h3>
+      <p>Full OAuth flow — authorize directly from the Shopify Store form. The access token is stored and managed automatically after authorization.</p>
+    </div>
+    <div class="feat-card">
+      <svg class="feat-icon cyan-icon" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 14h12M16 10l4 4-4 4"/><circle cx="6" cy="14" r="2"/></svg>
+      <h3>SKU-Based Migration Tool</h3>
+      <p>Fetch existing Shopify products and map them to ERPNext items by SKU match. Reports matched, unmatched, and conflicting items before committing.</p>
+    </div>
+    <div class="feat-card">
+      <svg class="feat-icon" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4v20M4 14h20"/><circle cx="14" cy="14" r="5"/></svg>
+      <h3>Item Eligibility Filters</h3>
+      <p>Control which items sync to each store. Manual per-item overrides or automatic filter rules — e.g. "sync to this store if Item Group is Electronics."</p>
+    </div>
+  </div>
+</section>
+
+<!-- DOCTYPES -->
+<section class="section" id="doctypes">
+  <div class="eyebrow">Reference</div>
+  <h2>DocTypes</h2>
+  <p class="section-lead">The connector installs these DocTypes. <strong style="color:#fff">Shopify Store</strong> is the main configuration document; all others are children or logs.</p>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>DocType</th><th>Type</th><th>Module</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><span class="bold">Shopify Store</span></td><td><span class="badge b-orange">Main</span></td><td>Fateh Shopify Connector</td><td>Auth, company, tax accounts, sync settings, and webhook configuration per store</td></tr>
+        <tr><td><span class="bold">Fateh Shopify Log</span></td><td><span class="badge b-dim">System Log</span></td><td>Fateh Shopify Connector</td><td>Webhook and sync event log. Auto-named <code>FSC-LOG-#####</code>. Retained 30 days.</td></tr>
+        <tr><td><span class="bold">Item Shopify Store</span></td><td><span class="badge b-cyan">Child</span></td><td>Fateh Shopify Connector</td><td>Per-item, per-store mapping — product ID, variant ID, inventory item ID, last sync hash</td></tr>
+        <tr><td>Shopify Store Warehouse Mapping</td><td><span class="badge b-cyan">Child</span></td><td>Fateh Shopify Connector</td><td>Maps Shopify location IDs to ERPNext warehouses</td></tr>
+        <tr><td>Shopify Store Item Field</td><td><span class="badge b-cyan">Child</span></td><td>Fateh Shopify Connector</td><td>Field-to-field mapping including Shopify metafields</td></tr>
+        <tr><td>Shopify Store Collection Mapping</td><td><span class="badge b-cyan">Child</span></td><td>Fateh Shopify Connector</td><td>ERPNext field values → Shopify Custom Collections</td></tr>
+        <tr><td>Shopify Store Item Filter</td><td><span class="badge b-cyan">Child</span></td><td>Fateh Shopify Connector</td><td>Automatic eligibility rules for item sync</td></tr>
+        <tr><td>Shopify Store Tax Account</td><td><span class="badge b-cyan">Child</span></td><td>Fateh Shopify Connector</td><td>Shopify tax title → ERPNext account + item tax template overrides</td></tr>
+        <tr><td>Shopify Store Payment Method Mapping</td><td><span class="badge b-cyan">Child</span></td><td>Fateh Shopify Connector</td><td>Shopify gateway name → ERPNext Mode of Payment + bank account</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- CUSTOM FIELDS -->
+<section class="section" id="custom-fields">
+  <div class="eyebrow">Reference</div>
+  <h2>Custom Fields</h2>
+  <p class="section-lead">Fields added to standard ERPNext doctypes via fixtures. Applied automatically on <code>bench migrate</code>.</p>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>DocType</th><th>Field</th><th>Type</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td class="bold" rowspan="2">Item</td><td><code>shopify_stores_section</code></td><td>Section Break</td><td>Groups the stores table, inserted after UOMs</td></tr>
+        <tr><td><code>shopify_stores</code></td><td>Table → Item Shopify Store</td><td>Per-store product mapping rows</td></tr>
+        <tr><td class="bold">Customer</td><td><code>shopify_customer_id</code></td><td>Data (read-only)</td><td>Shopify customer ID, visible only when populated</td></tr>
+        <tr><td class="bold" rowspan="6">Sales Order</td><td><code>shopify_store</code></td><td>Link → Shopify Store</td><td rowspan="6">Collapsible Shopify section, visible only when <code>shopify_order_id</code> is set</td></tr>
+        <tr><td><code>shopify_order_id</code></td><td>Data (read-only)</td></tr>
+        <tr><td><code>shopify_order_number</code></td><td>Data (read-only)</td></tr>
+        <tr><td><code>shopify_financial_status</code></td><td>Select (read-only)</td></tr>
+        <tr><td><code>shopify_fulfillment_status</code></td><td>Select (read-only)</td></tr>
+        <tr><td><code>shopify_customer_note</code></td><td>Small Text (read-only)</td></tr>
+        <tr><td class="bold">Sales Order Item</td><td><code>shopify_item_discount</code></td><td>Currency (read-only)</td><td>Per-line discount from Shopify order</td></tr>
+        <tr><td class="bold" rowspan="5">Delivery Note</td><td><code>shopify_store</code></td><td>Link → Shopify Store</td><td rowspan="5">Collapsible Shopify section on Delivery Note</td></tr>
+        <tr><td><code>shopify_order_id</code></td><td>Data (read-only)</td></tr>
+        <tr><td><code>shopify_order_number</code></td><td>Data (read-only)</td></tr>
+        <tr><td><code>shopify_fulfillment_id</code></td><td>Data (read-only)</td></tr>
+        <tr><td><code>shopify_customer_note</code></td><td>Small Text (read-only)</td></tr>
+        <tr><td class="bold" rowspan="4">Sales Invoice</td><td><code>shopify_store</code></td><td>Link → Shopify Store</td><td rowspan="4">Collapsible Shopify section on Sales Invoice</td></tr>
+        <tr><td><code>shopify_order_id</code></td><td>Data (read-only)</td></tr>
+        <tr><td><code>shopify_order_number</code></td><td>Data (read-only)</td></tr>
+        <tr><td><code>shopify_customer_note</code></td><td>Small Text (read-only)</td></tr>
+        <tr><td class="bold">Contact Phone</td><td><code>shopify_original_phone</code></td><td>Data (read-only)</td><td>Shopify's original phone value before ERPNext sanitization</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- WEBHOOKS -->
+<section class="section" id="webhooks">
+  <div class="eyebrow">Reference</div>
+  <h2>Webhook Events</h2>
+  <p class="section-lead">Each event can be enabled or disabled per store. Disabling an event unregisters it from Shopify and skips processing incoming requests of that type.</p>
+  <div class="webhook-list">
+    <div class="wh-row">
+      <div><div class="wh-event">orders/create</div><div style="margin-top:4px"><span class="badge b-orange">enabled by default</span></div></div>
+      <div><div class="wh-handler">fateh_shopify_connector.fateh_shopify_connector.order<strong style="color:#C8D8E8">.sync_sales_order</strong></div><div class="dim" style="margin-top:4px">Creates a Sales Order in the mapped company. Auto-submits if the store is configured to do so.</div></div>
+    </div>
+    <div class="wh-row">
+      <div><div class="wh-event">orders/paid</div><div style="margin-top:4px"><span class="badge b-orange">enabled by default</span></div></div>
+      <div><div class="wh-handler">fateh_shopify_connector.fateh_shopify_connector.order<strong style="color:#C8D8E8">.process_paid_order</strong></div><div class="dim" style="margin-top:4px">Creates Sales Invoice and Payment Entry for paid orders when automation is enabled.</div></div>
+    </div>
+    <div class="wh-row">
+      <div><div class="wh-event">orders/cancelled</div><div style="margin-top:4px"><span class="badge b-orange">enabled by default</span></div></div>
+      <div><div class="wh-handler">fateh_shopify_connector.fateh_shopify_connector.order<strong style="color:#C8D8E8">.cancel_order</strong></div><div class="dim" style="margin-top:4px">Cancels the corresponding Sales Order (and downstream documents) in ERPNext.</div></div>
+    </div>
+    <div class="wh-row">
+      <div><div class="wh-event">orders/fulfilled</div><div style="margin-top:4px"><span class="badge b-cyan">fulfillment</span></div></div>
+      <div><div class="wh-handler">fateh_shopify_connector.fateh_shopify_connector.fulfillment<strong style="color:#C8D8E8">.sync_fulfillment</strong></div><div class="dim" style="margin-top:4px">Creates a Delivery Note with tracking information. Duplicate-safe.</div></div>
+    </div>
+    <div class="wh-row">
+      <div><div class="wh-event">orders/partially_fulfilled</div><div style="margin-top:4px"><span class="badge b-cyan">fulfillment</span></div></div>
+      <div><div class="wh-handler">fateh_shopify_connector.fateh_shopify_connector.fulfillment<strong style="color:#C8D8E8">.sync_fulfillment</strong></div><div class="dim" style="margin-top:4px">Same handler — handles partial quantities and remaining-qty auto-creation if enabled.</div></div>
+    </div>
+  </div>
+  <div style="margin-top:28px">
+    <div class="eyebrow" style="margin-bottom:12px">Scheduled Task</div>
+    <div class="sched-card">
+      <div class="sched-cron">*/10 * * * *</div>
+      <div class="sched-sep"></div>
+      <div>
+        <div class="sched-fn">fateh_shopify_connector.fateh_shopify_connector.inventory.update_inventory_on_shopify</div>
+        <div class="sched-desc">Pushes ERPNext stock levels to Shopify every 10 minutes. Respects per-store frequency and sync mode (Full Inventory or Changed Bins).</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PERMISSIONS -->
+<section class="section" id="permissions">
+  <div class="eyebrow">Reference</div>
+  <h2>Permissions</h2>
+  <p class="section-lead">Access to Shopify Store and Fateh Shopify Log follows these role assignments.</p>
+  <div class="perm-grid">
+    <div class="perm-card"><div class="perm-role">Sales Manager</div><div class="perm-item ok">Read &amp; Write</div><div class="perm-item ok">Create &amp; Delete</div><div class="perm-item ok">Import &amp; Export</div><div class="perm-item ok">Email &amp; Print</div></div>
+    <div class="perm-card"><div class="perm-role">System Manager</div><div class="perm-item ok">Full administrative access</div><div class="perm-item ok">Create &amp; Delete</div><div class="perm-item ok">Import &amp; Export</div><div class="perm-item ok">Share</div></div>
+    <div class="perm-card"><div class="perm-role">Sales User</div><div class="perm-item ok">Read</div><div class="perm-item ok">Reports</div><div class="perm-item ok">Email &amp; Print</div><div class="perm-item" style="opacity:.4">No write access</div></div>
+    <div class="perm-card"><div class="perm-role">Accounts Manager</div><div class="perm-item ok">Read</div><div class="perm-item ok">Reports</div><div class="perm-item ok">Email &amp; Print</div><div class="perm-item" style="opacity:.4">No write access</div></div>
+    <div class="perm-card"><div class="perm-role">Accounts User</div><div class="perm-item ok">Read</div><div class="perm-item ok">Reports</div><div class="perm-item" style="opacity:.4">No write access</div><div class="perm-item" style="opacity:.4">No email/print</div></div>
+  </div>
+</section>
+
+<!-- ARCHITECTURE -->
+<section class="section" id="architecture">
+  <div class="eyebrow">Developer</div>
+  <h2>Architecture</h2>
+  <p class="section-lead">File structure of the <code>fateh_shopify_connector</code> package within the app.</p>
+  <div class="arch-tree">
+<span class="at-dir">fateh_shopify_connector/</span>
+├── <span class="at-dir">fateh_shopify_connector/</span>
+│   ├── <span class="at-file">connection.py</span>      <span class="at-cmt"># @shopify_session decorator, HMAC webhook endpoint</span>
+│   ├── <span class="at-file">order.py</span>           <span class="at-cmt"># Order sync (webhooks + manual)</span>
+│   ├── <span class="at-file">fulfillment.py</span>     <span class="at-cmt"># Fulfillment webhook → Delivery Note</span>
+│   ├── <span class="at-file">product.py</span>         <span class="at-cmt"># Product/item sync to Shopify</span>
+│   ├── <span class="at-file">inventory.py</span>       <span class="at-cmt"># Inventory sync to Shopify (GraphQL)</span>
+│   ├── <span class="at-file">oauth.py</span>           <span class="at-cmt"># OAuth authorize &amp; callback endpoints</span>
+│   ├── <span class="at-dir">utils/</span>
+│   │   └── <span class="at-file">__init__.py</span>    <span class="at-cmt"># create_shopify_log() helper</span>
+│   ├── <span class="at-dir">doctype/</span>
+│   │   ├── <span class="at-dir">shopify_store/</span>            <span class="at-cmt"># Main config doctype</span>
+│   │   ├── <span class="at-dir">fateh_shopify_log/</span>        <span class="at-cmt"># Event log (FSC-LOG-#####)</span>
+│   │   └── <span class="at-dir">item_shopify_store/</span>       <span class="at-cmt"># Per-item, per-store mapping (child)</span>
+├── <span class="at-dir">utils/</span>
+│   └── <span class="at-file">logger.py</span>             <span class="at-cmt"># get_logger() for structured logging</span>
+├── <span class="at-dir">fixtures/</span>
+│   └── <span class="at-file">custom_field.json</span>     <span class="at-cmt"># Custom fields for Item, Customer, SO, DN, SI</span>
+├── <span class="at-dir">public/js/</span>
+│   └── <span class="at-file">item.js</span>               <span class="at-cmt"># Item form enhancements</span>
+├── <span class="at-file">hooks.py</span>               <span class="at-cmt"># App hooks, fixtures, scheduler, doc_events</span>
+└── <span class="at-file">modules.txt</span>            <span class="at-cmt"># Fateh Shopify Connector</span>
+  </div>
+</section>
+
+<!-- INSTALLATION -->
+<section class="section" id="installation">
+  <div class="eyebrow">Developer</div>
+  <h2>Installation</h2>
+  <p class="section-lead">Requires ERPNext v15+ and Python 3.10+. The <code>ShopifyAPI</code> Python package is installed as a dependency.</p>
+  <div class="code-block">
+<span class="cmt"># From your bench directory</span>
+<span class="cmd">bench</span> get-app <span class="str">fateh_shopify_connector</span> --branch version-15
+
+<span class="cmd">bench</span> --site <span class="str">[your-site]</span> install-app fateh_shopify_connector
+
+<span class="cmd">bench</span> --site <span class="str">[your-site]</span> migrate
+
+<span class="cmt"># Restart workers to pick up the new scheduler task</span>
+<span class="cmd">bench</span> restart
+  </div>
+</section>
+
+<!-- AUTHENTICATION -->
+<section class="section" id="authentication">
+  <div class="eyebrow">Developer</div>
+  <h2>Authentication</h2>
+  <p class="section-lead">The connector uses OAuth 2.0 exclusively. Shopify deprecated legacy private apps in January 2026 — all new apps must use OAuth.</p>
+  <div class="auth-card">
+    <h3>OAuth 2.0</h3>
+    <p>Authorize directly from the Shopify Store form. The connector handles the full OAuth flow — the access token is stored automatically after authorization and refreshed as needed.</p>
+    <ul>
+      <li>Create an app in the <strong style="color:#fff">Shopify Dev Dashboard</strong> (dev.shopify.com)</li>
+      <li>Copy the <strong style="color:#fff">Client ID</strong> and <strong style="color:#fff">Client Secret</strong> into the Shopify Store form</li>
+      <li>Save the form — the <strong style="color:#fff">Callback URL</strong> field is populated automatically</li>
+      <li>Add the Callback URL to Shopify's "Allowed redirection URL(s)"</li>
+      <li>Click <strong style="color:#fff">Actions → Connect to Shopify</strong></li>
+      <li>Authorize on Shopify — OAuth Status becomes <strong style="color:var(--green)">Connected</strong></li>
+    </ul>
+    <div class="code-block" style="margin-top:14px;font-size:11.5px">
+Callback URL:<br>
+<span class="str">https://[your-site]/api/method/fateh_shopify_connector.fateh_shopify_connector.connection.store_request_data</span>
+    </div>
+  </div>
+  <div style="margin-top:8px">
+    <div class="eyebrow" style="margin-bottom:12px">Required OAuth Scopes</div>
+    <div class="code-block">read_orders, write_orders
+read_customers, write_customers
+read_products, write_products
+read_inventory, write_inventory
+read_locations
+read_fulfillments, write_fulfillments</div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════ SETUP GUIDE ════════════════════════════════════════ -->
+
+<section class="section" id="prerequisites">
+  <div class="guide-divider"><span class="guide-divider-label">Setup Guide</span><span class="guide-divider-line"></span></div>
+  <div style="margin-top:32px">
+    <div class="eyebrow">Step 0</div>
+    <h2>Prerequisites</h2>
+    <p class="section-lead">Confirm all of these before starting. Each item is required — a missing one will cause the OAuth flow or webhook processing to fail.</p>
+    <div class="task-list">
+      <div class="task">
+        <div class="task-icon green">✓</div>
+        <div class="task-body"><strong>ERPNext v15 or later is running</strong><p>Run <code>bench version</code> to confirm. The connector is incompatible with v14 and earlier.</p></div>
+      </div>
+      <div class="task">
+        <div class="task-icon green">✓</div>
+        <div class="task-body"><strong>fateh_shopify_connector is installed and migrated</strong><p>Run <code>bench --site [site] list-apps</code> to confirm, then <code>bench --site [site] migrate</code> to apply DocTypes and fixtures.</p></div>
+      </div>
+      <div class="task">
+        <div class="task-icon orange">🔗</div>
+        <div class="task-body"><strong>ERPNext site is publicly accessible over HTTPS</strong><p>Shopify sends webhooks to your URL — it must be reachable from the internet. For local development, configure <code>localtunnel_url</code> in <code>site_config.json</code>.</p></div>
+      </div>
+      <div class="task">
+        <div class="task-icon cyan">🛍</div>
+        <div class="task-body"><strong>Admin access to the Shopify store and Dev Dashboard</strong><p>You need Shopify Admin → Settings → Apps access and access to <code>dev.shopify.com</code> to create the OAuth app.</p></div>
+      </div>
+      <div class="task">
+        <div class="task-icon orange">🏢</div>
+        <div class="task-body"><strong>ERPNext Company, Chart of Accounts, and Warehouses are set up</strong><p>The connector maps each Shopify store to an ERPNext Company. That company must have a complete Chart of Accounts, at least one Warehouse, and a default Cost Center before order sync will work.</p></div>
+      </div>
+    </div>
+    <div class="info-box tip">
+      <span class="info-icon">💡</span>
+      <div class="ib-body"><strong>Multi-store setup:</strong> Repeat Steps 1–8 for each Shopify store. Each gets its own Shopify Store document with independent company, warehouse, and tax settings. The Shopify Dev Dashboard app (Step 1) can be shared across stores.</div>
+    </div>
+  </div>
+</section>
+
+<!-- STEP 1 -->
+<section class="section" id="step1">
+  <div class="step-header">
+    <div class="step-circle">1</div>
+    <div class="step-title-wrap"><div class="eyebrow">Shopify Side</div><h2>Create the Shopify App</h2></div>
+  </div>
+  <p class="section-lead">The connector requires a Shopify app created in the <strong style="color:#fff">Shopify Dev Dashboard</strong> (not the older "Develop apps" flow inside Shopify Admin). This gives you the Client ID and Client Secret for the OAuth flow.</p>
+  <div class="info-box warn">
+    <span class="info-icon">⚠</span>
+    <div class="ib-body"><strong>Shopify deprecated legacy private apps from January 2026.</strong> All new integrations must use OAuth. The connector no longer accepts legacy access tokens.</div>
+  </div>
+
+  <div style="margin-bottom:28px">
+    <div class="eyebrow" style="margin-bottom:14px">Dev Dashboard Setup</div>
+    <div class="step-flow">
+      <div class="sf-item"><div class="sf-spine"><div class="sf-bullet">1</div><div class="sf-line"></div></div><div class="sf-body"><h4>Open the Shopify Dev Dashboard</h4><p>Go to <code>dev.shopify.com</code> and sign in with your Shopify Partner or store account. A Partner account is free and required for the Dev Dashboard.</p></div></div>
+      <div class="sf-item"><div class="sf-spine"><div class="sf-bullet">2</div><div class="sf-line"></div></div><div class="sf-body"><h4>Navigate to Apps → Create app</h4><p>Click <strong style="color:#fff">Apps</strong> in the left sidebar, then <strong style="color:#fff">Create app</strong>. Give it an internal name (e.g. "Fateh ERP Connector") — this appears in Shopify Admin under installed apps.</p></div></div>
+      <div class="sf-item"><div class="sf-spine"><div class="sf-bullet">3</div><div class="sf-line"></div></div><div class="sf-body"><h4>Create a version</h4><p>Inside your new app, click <strong style="color:#fff">Versions → Create version</strong>. You configure redirect URI and scopes on this version.</p></div></div>
+      <div class="sf-item sf-last"><div class="sf-spine"><div class="sf-bullet">4</div><div class="sf-line"></div></div><div class="sf-body"><h4>Get Client ID and Client Secret</h4><p>Click <strong style="color:#fff">Client credentials</strong>. Copy both values — you'll enter them into ERPNext in Step 2. Keep the Client Secret confidential.</p></div></div>
+    </div>
+  </div>
+
+  <div style="margin-bottom:28px">
+    <div class="eyebrow" style="margin-bottom:14px">Required API Scopes</div>
+    <p style="font-size:14px;color:var(--dim);margin-bottom:14px">Add all of these in the version's configuration. Missing any scope causes sync failures for the corresponding resource type.</p>
+    <div class="scope-grid">
+      <div class="scope-item">read_orders</div><div class="scope-item">write_orders</div>
+      <div class="scope-item">read_customers</div><div class="scope-item">write_customers</div>
+      <div class="scope-item">read_products</div><div class="scope-item">write_products</div>
+      <div class="scope-item">read_inventory</div><div class="scope-item">write_inventory</div>
+      <div class="scope-item">read_locations</div>
+      <div class="scope-item">read_fulfillments</div><div class="scope-item">write_fulfillments</div>
+    </div>
+  </div>
+
+  <div>
+    <div class="eyebrow" style="margin-bottom:12px">Redirect (Callback) URI</div>
+    <p style="font-size:14px;color:var(--dim);margin-bottom:14px">In <strong style="color:#fff">Allowed redirection URL(s)</strong>, add your ERPNext callback URL (also shown on the Shopify Store document after Step 2):</p>
+    <div class="code-block">https://<span class="str">[your-erpnext-site]</span>/api/method/fateh_shopify_connector.fateh_shopify_connector.connection.store_request_data</div>
+    <div class="info-box warn">
+      <span class="info-icon">⚠</span>
+      <div class="ib-body">The redirect URI must match <strong>exactly</strong> — no trailing slash, correct protocol. A mismatch returns a "redirect_uri_mismatch" error from Shopify during the OAuth flow.</div>
+    </div>
+  </div>
+</section>
+
+<!-- STEP 2 -->
+<section class="section" id="step2">
+  <div class="step-header">
+    <div class="step-circle">2</div>
+    <div class="step-title-wrap"><div class="eyebrow">ERPNext Side</div><h2>Create the Shopify Store Document</h2></div>
+  </div>
+  <p class="section-lead">In ERPNext, navigate to the <strong style="color:#fff">Fateh Shopify Connector</strong> module and open <strong style="color:#fff">Shopify Store</strong>. Create a new record for your store.</p>
+
+  <div style="margin-bottom:28px">
+    <div class="eyebrow" style="margin-bottom:14px">Authentication Section</div>
+    <div class="screenshot">
+      <div class="ss-bar">
+        <div class="ss-dot" style="background:#FF5F57"></div><div class="ss-dot" style="background:#FEBC2E"></div><div class="ss-dot" style="background:#28C840"></div>
+        <span class="ss-url">ERPNext → Fateh Shopify Connector → Shopify Store → New</span>
+      </div>
+      <div class="ss-body">
+        <div class="field-row">
+          <div class="field-group"><div class="ss-label">Shop Domain <span style="color:var(--red);font-size:10px">required</span></div><div class="ss-field"><span class="ss-field-val">mystore.myshopify.com</span></div></div>
+          <div class="field-group"><div class="ss-label">API Version</div><div class="ss-field"><span class="ss-field-val">2024-10</span></div></div>
+        </div>
+        <div class="field-row">
+          <div class="field-group"><div class="ss-label">Client ID <span style="color:var(--red);font-size:10px">required</span></div><div class="ss-field"><span class="ss-field-val">abc123def456...</span></div></div>
+          <div class="field-group"><div class="ss-label">Client Secret <span style="color:var(--red);font-size:10px">required</span></div><div class="ss-field"><span class="ss-field-placeholder">••••••••••••••••</span></div></div>
+        </div>
+        <div class="field-group"><div class="ss-label">Callback URL <span style="color:var(--cyan);font-size:10px">auto-filled on save</span></div><div class="ss-field"><span class="ss-field-val">https://erpnext.mycompany.com/api/method/fateh_shopify_connector...</span></div></div>
+      </div>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Field</th><th>Value</th><th>Required?</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td><code>shop_domain</code></td><td>e.g. <code>mystore.myshopify.com</code></td><td><span class="badge b-req">Required</span></td><td>Strip https:// and trailing slash. This becomes the document name.</td></tr>
+          <tr><td><code>client_id</code></td><td>From Shopify Dev Dashboard</td><td><span class="badge b-req">Required</span></td><td>Client credentials tab of your app version.</td></tr>
+          <tr><td><code>client_secret</code></td><td>From Shopify Dev Dashboard</td><td><span class="badge b-req">Required</span></td><td>Also used as the webhook HMAC secret. Keep confidential.</td></tr>
+          <tr><td><code>callback_url</code></td><td>Auto-generated on Save</td><td><span class="badge b-auto">Auto</span></td><td>Copy this to Shopify's "Allowed redirection URL(s)" if not done in Step 1.</td></tr>
+          <tr><td><code>shared_secret</code></td><td>Optional override</td><td><span class="badge b-opt">Optional</span></td><td>If set, overrides Client Secret for HMAC webhook validation.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="info-box tip">
+      <span class="info-icon">💡</span>
+      <div class="ib-body"><strong>Save first, then copy Callback URL.</strong> The Callback URL field is populated by the backend on save — save once before copying it to Shopify's redirect URI list.</div>
+    </div>
+  </div>
+
+  <div>
+    <div class="eyebrow" style="margin-bottom:14px">ERPNext Settings Section</div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Field</th><th>Description</th><th>Required?</th></tr></thead>
+        <tbody>
+          <tr><td><code>company</code></td><td>The ERPNext Company orders will be booked under</td><td><span class="badge b-req">Required</span></td></tr>
+          <tr><td><code>default_customer</code></td><td>Fallback Customer when Shopify customer has no email match in ERPNext</td><td><span class="badge b-opt">Optional</span></td></tr>
+          <tr><td><code>customer_group</code></td><td>Customer Group assigned to auto-created customers from Shopify</td><td><span class="badge b-opt">Optional</span></td></tr>
+          <tr><td><code>cost_center</code></td><td>Default Cost Center for journal entries</td><td><span class="badge b-opt">Optional</span></td></tr>
+          <tr><td><code>price_list</code></td><td>Price list used when creating Sales Orders</td><td><span class="badge b-opt">Optional</span></td></tr>
+          <tr><td><code>item_group</code></td><td>Item Group assigned to new items created from Shopify products</td><td><span class="badge b-opt">Optional</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- STEP 3 -->
+<section class="section" id="step3">
+  <div class="step-header">
+    <div class="step-circle">3</div>
+    <div class="step-title-wrap"><div class="eyebrow">ERPNext Side</div><h2>Connect via OAuth</h2></div>
+  </div>
+  <p class="section-lead">After saving the Shopify Store document, initiate the OAuth authorization flow to grant the connector permission to act on behalf of your store.</p>
+  <div class="step-flow">
+    <div class="sf-item"><div class="sf-spine"><div class="sf-bullet">1</div><div class="sf-line"></div></div><div class="sf-body"><h4>Open the saved Shopify Store document</h4><p>The document must be saved (not new) with valid Client ID and Client Secret entered.</p></div></div>
+    <div class="sf-item"><div class="sf-spine"><div class="sf-bullet">2</div><div class="sf-line"></div></div><div class="sf-body"><h4>Click Actions → Connect to Shopify</h4><p>This button appears in the Actions menu when Client ID is populated. Clicking it redirects your browser to Shopify's authorization page.</p></div></div>
+    <div class="sf-item"><div class="sf-spine"><div class="sf-bullet">3</div><div class="sf-line"></div></div><div class="sf-body"><h4>Authorize on Shopify</h4><p>Review the permissions list and click <strong style="color:#fff">Install app</strong>. You are redirected back to ERPNext automatically.</p></div></div>
+    <div class="sf-item"><div class="sf-spine"><div class="sf-bullet">4</div><div class="sf-line"></div></div><div class="sf-body"><h4>Verify: OAuth Status = Connected</h4><p>Reload the Shopify Store document. <code>oauth_status</code> should show <strong style="color:var(--green)">Connected</strong> and the dashboard banner confirms the authorized user.</p></div></div>
+    <div class="sf-item sf-last"><div class="sf-spine"><div class="sf-bullet">5</div><div class="sf-line"></div></div><div class="sf-body"><h4>Test the connection</h4><p>Click <strong style="color:#fff">Actions → Test Connection</strong>. If successful, a green message shows your Shopify shop name and email.</p></div></div>
+  </div>
+  <div class="info-box note">
+    <span class="info-icon">ℹ</span>
+    <div class="ib-body"><strong>Token rotation:</strong> OAuth tokens do not expire unless you revoke the app or change scopes. After adding new scopes, re-authorize by clicking "Connect to Shopify" again — the old token is replaced automatically.</div>
+  </div>
+</section>
+
+<!-- STEP 4 -->
+<section class="section" id="step4">
+  <div class="step-header">
+    <div class="step-circle">4</div>
+    <div class="step-title-wrap"><div class="eyebrow">ERPNext Side</div><h2>Map Shopify Locations to Warehouses</h2></div>
+  </div>
+  <p class="section-lead">Shopify locations correspond to ERPNext warehouses. Map at least one location before inventory sync or fulfillment processing will work correctly.</p>
+  <div class="step-flow">
+    <div class="sf-item"><div class="sf-spine"><div class="sf-bullet">1</div><div class="sf-line"></div></div><div class="sf-body"><h4>Click Actions → Fetch Shopify Locations</h4><p>Calls the Shopify Locations API and populates the Warehouse Mapping table with your Shopify location IDs and names.</p></div></div>
+    <div class="sf-item"><div class="sf-spine"><div class="sf-bullet">2</div><div class="sf-line"></div></div><div class="sf-body"><h4>Assign an ERPNext Warehouse to each location</h4><p>In the Warehouse Mapping table, set <code>erpnext_warehouse</code> for each Shopify location. The warehouse must belong to the same company configured in Step 2.</p></div></div>
+    <div class="sf-item sf-last"><div class="sf-spine"><div class="sf-bullet">3</div><div class="sf-line"></div></div><div class="sf-body"><h4>Set a Default Warehouse</h4><p>In Inventory Settings, set the <code>warehouse</code> field. This is the fallback used when a Shopify location has no explicit mapping.</p></div></div>
+  </div>
+  <div class="info-box tip">
+    <span class="info-icon">💡</span>
+    <div class="ib-body">Inventory sync direction is ERPNext → Shopify: stock levels in ERPNext are pushed to Shopify, not the other way. If you use a single Shopify location, one mapping row is sufficient.</div>
+  </div>
+</section>
+
+<!-- STEP 5 -->
+<section class="section" id="step5">
+  <div class="step-header">
+    <div class="step-circle">5</div>
+    <div class="step-title-wrap"><div class="eyebrow">ERPNext Side</div><h2>Configure Tax Settings</h2></div>
+  </div>
+  <p class="section-lead">Tax configuration determines how Shopify's tax lines map to ERPNext Sales Tax accounts. Incorrect mapping causes order totals to mismatch between Shopify and ERPNext.</p>
+  <div class="tbl-wrap" style="margin-bottom:20px">
+    <table>
+      <thead><tr><th>Field</th><th>Description</th><th>Required?</th></tr></thead>
+      <tbody>
+        <tr><td><code>default_sales_tax_account</code></td><td>ERPNext account used for GST/VAT when no specific tax title mapping exists. Must be a Tax-type account.</td><td><span class="badge b-opt">Recommended</span></td></tr>
+        <tr><td><code>default_shipping_charges_account</code></td><td>Income account for shipping charges when Add Shipping as Item is off.</td><td><span class="badge b-opt">Recommended</span></td></tr>
+        <tr><td><code>write_off_account</code></td><td>Account for rounding adjustments. Falls back to the company's Write Off Account if not set.</td><td><span class="badge b-opt">Recommended</span></td></tr>
+        <tr><td><code>tax_accounts</code> (table)</td><td>Per-title overrides: map a Shopify tax title (e.g. "VAT 15%") to a specific ERPNext account and optionally a zero-rated Item Tax Template.</td><td><span class="badge b-opt">Optional</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="info-box note">
+    <span class="info-icon">ℹ</span>
+    <div class="ib-body"><strong>How tax calculation works:</strong> The connector uses the On Net Total approach. Each Shopify tax line becomes a row in the Sales Order Tax table. The rate is back-calculated from Shopify amounts — no tax templates are required unless you need zero-rating support.</div>
+  </div>
+</section>
+
+<!-- STEP 6 -->
+<section class="section" id="step6">
+  <div class="step-header">
+    <div class="step-circle">6</div>
+    <div class="step-title-wrap"><div class="eyebrow">ERPNext Side</div><h2>Configure Order Settings</h2></div>
+  </div>
+  <p class="section-lead">Order settings control how Shopify orders become ERPNext documents and how much of the post-order workflow is automated.</p>
+  <div style="margin-bottom:24px">
+    <div class="eyebrow" style="margin-bottom:12px">Order Automation</div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Field</th><th>What it does when enabled</th></tr></thead>
+        <tbody>
+          <tr><td><code>sync_orders</code></td><td>Master toggle. Must be on for any order processing to happen.</td></tr>
+          <tr><td><code>auto_submit_sales_order</code></td><td>Automatically submits the Sales Order when the Shopify order is paid (<code>orders/paid</code> webhook).</td></tr>
+          <tr><td><code>auto_create_invoice</code></td><td>Creates and submits a Sales Invoice from the Sales Order for paid orders. Requires auto-submit to be on.</td></tr>
+          <tr><td><code>auto_create_payment_entry</code></td><td>Creates a Payment Entry linked to the Sales Invoice. The gateway must be mapped in Payment Method Mapping.</td></tr>
+          <tr><td><code>add_shipping_as_item</code></td><td>Adds shipping charges as a Sales Order line item instead of a tax row.</td></tr>
+          <tr><td><code>sync_all_order_statuses</code></td><td>Syncs all orders including fulfilled and closed. Warning: enabling on a store with history imports many historical orders.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div>
+    <div class="eyebrow" style="margin-bottom:12px">Payment Method Mapping</div>
+    <p style="font-size:14px;color:var(--dim);margin-bottom:14px">Required when <code>auto_create_payment_entry</code> is enabled. Add one row per Shopify gateway:</p>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Column</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>shopify_gateway</code></td><td>Gateway name exactly as it appears in Shopify orders (e.g. <code>Shopify Payments</code>, <code>Cash on Delivery (COD)</code>, <code>Manual</code>)</td></tr>
+          <tr><td><code>mode_of_payment</code></td><td>ERPNext Mode of Payment to use for the Payment Entry</td></tr>
+          <tr><td><code>account</code></td><td>The Bank or Cash account the payment is received into</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="info-box warn">
+      <span class="info-icon">⚠</span>
+      <div class="ib-body">Payment entries fail hard if a gateway is not mapped — no silent fallback. Check Fateh Shopify Log for <code>payment_gateway_not_mapped</code> errors and add the missing row.</div>
+    </div>
+  </div>
+</section>
+
+<!-- STEP 7 -->
+<section class="section" id="step7">
+  <div class="step-header">
+    <div class="step-circle">7</div>
+    <div class="step-title-wrap"><div class="eyebrow">Shopify Side</div><h2>Register Webhooks</h2></div>
+  </div>
+  <p class="section-lead">Webhooks are the real-time connection between Shopify events and ERPNext. Register them once — they persist in Shopify until you update or delete the app.</p>
+  <div class="step-flow">
+    <div class="sf-item"><div class="sf-spine"><div class="sf-bullet">1</div><div class="sf-line"></div></div><div class="sf-body"><h4>Configure which webhook events to enable</h4><p>In the Webhook Events section of the Shopify Store document, toggle the events you need. All five are enabled by default.</p></div></div>
+    <div class="sf-item"><div class="sf-spine"><div class="sf-bullet">2</div><div class="sf-line"></div></div><div class="sf-body"><h4>Click Actions → Register Webhooks</h4><p>A confirmation dialog appears. Clicking Continue clears any existing webhooks for your site from Shopify, then registers fresh ones for the enabled events.</p></div></div>
+    <div class="sf-item"><div class="sf-spine"><div class="sf-bullet">3</div><div class="sf-line"></div></div><div class="sf-body"><h4>Verify: Fetch and inspect webhooks</h4><p>Click <strong style="color:#fff">Actions → Fetch Webhooks</strong>. A dialog lists each webhook's topic and callback URL — confirm your site URL appears.</p></div></div>
+    <div class="sf-item sf-last"><div class="sf-spine"><div class="sf-bullet">4</div><div class="sf-line"></div></div><div class="sf-body"><h4>When to re-register</h4><p>Re-register when you change the site domain, enable or disable webhook events, or Shopify reports delivery failures. Shopify auto-disables webhooks after repeated failures — watch Fateh Shopify Log for error patterns.</p></div></div>
+  </div>
+  <div class="info-box note">
+    <span class="info-icon">ℹ</span>
+    <div class="ib-body"><strong>HMAC validation:</strong> Every incoming webhook is verified against the Client Secret (or Shared Secret if set). If validation fails, the connector logs an error and drops the payload. The Shared Secret field lets you use a separate secret if needed.</div>
+  </div>
+</section>
+
+<!-- STEP 8 -->
+<section class="section" id="step8">
+  <div class="step-header">
+    <div class="step-circle">8</div>
+    <div class="step-title-wrap"><div class="eyebrow">Go Live</div><h2>Enable the Store &amp; Verify</h2></div>
+  </div>
+  <p class="section-lead">Enable the store, place a test order in Shopify, and confirm everything flows into ERPNext correctly before going live with real orders.</p>
+  <div class="checklist" style="margin-bottom:28px">
+    <div class="cl-item"><div class="cl-check">✓</div>OAuth Status = Connected (Step 3)</div>
+    <div class="cl-item"><div class="cl-check">✓</div>Test Connection succeeded (Step 3)</div>
+    <div class="cl-item"><div class="cl-check">✓</div>At least one Warehouse is mapped (Step 4)</div>
+    <div class="cl-item"><div class="cl-check">✓</div>Default Sales Tax Account is set (Step 5)</div>
+    <div class="cl-item"><div class="cl-check">✓</div>Sync Orders is enabled and payment gateway is mapped (Step 6)</div>
+    <div class="cl-item"><div class="cl-check">✓</div>Webhooks registered and verified (Step 7)</div>
+  </div>
+  <p style="font-size:14px;color:var(--dim);margin-bottom:20px">Toggle the <strong style="color:#fff">Enabled</strong> checkbox at the top of the Shopify Store document and save. The connector is now live — incoming webhooks will be processed and the inventory scheduler will run every 10 minutes.</p>
+  <div class="eyebrow" style="margin-bottom:12px">Test with a real order</div>
+  <div class="step-flow" style="margin-bottom:20px">
+    <div class="sf-item"><div class="sf-spine"><div class="sf-bullet">1</div><div class="sf-line"></div></div><div class="sf-body"><h4>Place a test order in Shopify</h4><p>Use Shopify's draft orders or a test payment gateway. Place and pay for the order.</p></div></div>
+    <div class="sf-item"><div class="sf-spine"><div class="sf-bullet">2</div><div class="sf-line"></div></div><div class="sf-body"><h4>Check Fateh Shopify Log</h4><p>In ERPNext, go to <strong style="color:#fff">Fateh Shopify Connector → Fateh Shopify Log</strong>. You should see a <code>Queued</code> entry followed by <code>Success</code> for <code>orders/create</code>. If Status is Error, expand the log to read the Traceback.</p></div></div>
+    <div class="sf-item sf-last"><div class="sf-spine"><div class="sf-bullet">3</div><div class="sf-line"></div></div><div class="sf-body"><h4>Locate the Sales Order in ERPNext</h4><p>Filter Sales Orders by <code>shopify_order_id</code>. Verify line items, tax amounts, customer, and total match the Shopify order exactly.</p></div></div>
+  </div>
+  <div class="verify-grid">
+    <div class="v-card pass"><div class="v-badge vb-pass">Success</div><div class="v-title">What success looks like</div><div class="v-desc">Log shows Status = Success. Sales Order exists with matching total. Customer was found or created. Tax rows match Shopify tax lines. If automation is on, Sales Invoice and Payment Entry are also present.</div></div>
+    <div class="v-card fail"><div class="v-badge vb-fail">Failure indicators</div><div class="v-title">Common failure signs</div><div class="v-desc">Log shows Status = Error. No Sales Order created. Traceback mentions: <code>item_not_found</code> (SKU mismatch), <code>tax_account_missing</code>, <code>payment_gateway_not_mapped</code>, or <code>HMAC mismatch</code>.</div></div>
+  </div>
+</section>
+
+<!-- TROUBLESHOOTING -->
+<section class="section" id="troubleshoot">
+  <div class="eyebrow">Troubleshooting</div>
+  <h2>Common Issues</h2>
+  <p class="section-lead">Most issues leave a trace in <strong style="color:#fff">Fateh Shopify Log</strong>. Check Status = Error entries there first — the Traceback field usually points directly at the problem.</p>
+  <div class="ts-item"><div class="ts-q">OAuth authorization fails or redirects to an error page</div><div class="ts-a">The most common cause is a <strong>redirect URI mismatch</strong>. The Callback URL in ERPNext must exactly match what's in Shopify's "Allowed redirection URL(s)" — including <code>https://</code> and no trailing slash. Also verify Client ID and Client Secret are correct (copy-paste, don't retype). Save the ERPNext document, then re-authorize.</div></div>
+  <div class="ts-item"><div class="ts-q">Webhooks are not triggering (no log entries for orders)</div><div class="ts-a">First confirm the store is <strong>Enabled</strong>. Click <strong>Actions → Fetch Webhooks</strong> — if none are listed, click <strong>Register Webhooks</strong>. Also confirm your ERPNext site URL is publicly accessible. In development, set <code>localtunnel_url</code> in <code>site_config.json</code> before registering webhooks.</div></div>
+  <div class="ts-item"><div class="ts-q">Webhook log shows "Unverified Webhook Data (signature mismatch)"</div><div class="ts-a">The HMAC validation failed — the Client Secret in ERPNext doesn't match what Shopify used to sign the webhook. Re-check your Client Secret (copy from Shopify Dev Dashboard). If you've set a Shared Secret, it takes precedence — clear it or ensure it matches. After fixing the secret you don't need to re-register webhooks.</div></div>
+  <div class="ts-item"><div class="ts-q">Sales Order created but total doesn't match Shopify</div><div class="ts-a">Almost always a <strong>tax mapping issue</strong>. Check the log's response data for Shopify tax lines. Ensure a <code>default_sales_tax_account</code> is set. For specific Shopify tax titles (e.g. "Customs") without a mapping, add them to the Tax Accounts table. Also confirm Write Off Account is set — without it, rounding differences become unreconciled discrepancies.</div></div>
+  <div class="ts-item"><div class="ts-q">Items in Shopify orders are not found in ERPNext</div><div class="ts-a">The connector matches by <strong>SKU</strong> (Shopify variant SKU → ERPNext Item Code). Use <strong>Actions → Fetch Products &amp; Map by SKU</strong> to run the mapping job. Items without an ERPNext match must be created manually first.</div></div>
+  <div class="ts-item"><div class="ts-q">Payment Entry fails with gateway not mapped error</div><div class="ts-a">Each Shopify payment gateway must have a row in the Payment Method Mapping table. The gateway name must match exactly — find the exact name in Fateh Shopify Log's request data (<code>payment_gateway_names</code> field). Common names: <code>Shopify Payments</code>, <code>Manual</code>, <code>Cash on Delivery (COD)</code>.</div></div>
+  <div class="ts-item"><div class="ts-q">Inventory sync isn't pushing stock to Shopify</div><div class="ts-a">Check: (1) <strong>Enable Inventory Sync</strong> is on. (2) The item has an <code>Item Shopify Store</code> row with <code>shopify_inventory_item_id</code> populated. (3) The warehouse matches a mapped warehouse. (4) Background workers are running — check <code>bench doctor</code>. The scheduler runs every 10 minutes.</div></div>
+  <div class="info-box success" style="margin-top:24px">
+    <span class="info-icon">📬</span>
+    <div class="ib-body"><strong>Still stuck?</strong> Open the failing Fateh Shopify Log record, copy the Traceback and request_data, and email <a href="mailto:siva@enfono.com" style="color:var(--accent)">siva@enfono.com</a> with your ERPNext and fateh_shopify_connector versions (<code>bench version</code>).</div>
+  </div>
+</section>
+
+</div><!-- /content -->
+
+<footer>
+  <div>Fateh Shopify Connector · v15.1.0 · ERPNext v15+</div>
+  <div>Copyright © 2024 <a href="mailto:siva@enfono.com">siva@enfono.com</a> · MIT License</div>
+</footer>
+
+</main>
+
+<script>
+(function(){
+
+/* ── CANVAS FLOW ANIMATION ── */
+const canvas = document.getElementById('flowCanvas');
+const ctx    = canvas.getContext('2d');
+let W=0, H=160;
+const particles=[];
+
+function resize(){W=canvas.parentElement.clientWidth;canvas.width=W;canvas.height=H;}
+
+function nodes(){
+  const cy=H/2,NW=110,NH=56,r=6,sx=80,ex=W-80,cx=W/2;
+  return{
+    shopify:   {x:sx,y:cy,label:'Shopify',         sub:'E-commerce',  color:'#5CB85C',w:NW,h:NH,r},
+    connector: {x:cx,y:cy,label:'Fateh Connector', sub:'ERPNext App', color:'#F7931E',w:136,h:NH,r},
+    erpnext:   {x:ex,y:cy,label:'ERPNext',          sub:'ERP System',  color:'#00C2D4',w:NW,h:NH,r},
+  };
+}
+
+function rr(x,y,w,h,r){const l=x-w/2,t=y-h/2;ctx.beginPath();ctx.moveTo(l+r,t);ctx.lineTo(l+w-r,t);ctx.arcTo(l+w,t,l+w,t+r,r);ctx.lineTo(l+w,t+h-r);ctx.arcTo(l+w,t+h,l+w-r,t+h,r);ctx.lineTo(l+r,t+h);ctx.arcTo(l,t+h,l,t+h-r,r);ctx.lineTo(l,t+r);ctx.arcTo(l,t,l+r,t,r);ctx.closePath();}
+
+function drawNode(n){
+  const g=ctx.createRadialGradient(n.x,n.y,0,n.x,n.y,n.w*.85);g.addColorStop(0,n.color+'22');g.addColorStop(1,n.color+'00');ctx.fillStyle=g;ctx.beginPath();ctx.arc(n.x,n.y,n.w*.85,0,Math.PI*2);ctx.fill();
+  rr(n.x,n.y,n.w,n.h,n.r);ctx.fillStyle='#111E30';ctx.fill();ctx.strokeStyle=n.color;ctx.lineWidth=1.5;ctx.stroke();
+  ctx.fillStyle='#FFFFFF';ctx.font='bold 11.5px "Segoe UI",system-ui,sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(n.label,n.x,n.y-5);
+  ctx.fillStyle='#6A8BAA';ctx.font='10px "Segoe UI",system-ui,sans-serif';ctx.fillText(n.sub,n.x,n.y+11);
+}
+
+function drawPipe(a,b){const ax=a.x+a.w/2+2,bx=b.x-b.w/2-2,cy=H/2;ctx.strokeStyle='#1A3352';ctx.lineWidth=2;ctx.setLineDash([5,5]);ctx.beginPath();ctx.moveTo(ax,cy);ctx.lineTo(bx,cy);ctx.stroke();ctx.setLineDash([]);const ar=5,tip=bx;ctx.fillStyle='#1A3352';ctx.beginPath();ctx.moveTo(tip,cy);ctx.lineTo(tip-ar,cy-ar/1.4);ctx.lineTo(tip-ar,cy+ar/1.4);ctx.closePath();ctx.fill();}
+
+function spawnParticles(){particles.length=0;const ns=nodes();[{from:ns.shopify,to:ns.connector,color:'#F7931E'},{from:ns.connector,to:ns.erpnext,color:'#00C2D4'}].forEach(({from,to,color})=>{for(let i=0;i<4;i++)particles.push({from,to,color,t:i/4+Math.random()*.1,speed:.0025+Math.random()*.002});});}
+
+function drawParticle(p){const ns=nodes();const labelMap={'Shopify':ns.shopify,'Fateh Connector':ns.connector,'ERPNext':ns.erpnext};p.from=labelMap[p.from.label];p.to=labelMap[p.to.label];const ax=p.from.x+p.from.w/2+2,bx=p.to.x-p.to.w/2-2,cy=H/2,x=ax+(bx-ax)*p.t;const xt=ax+(bx-ax)*Math.max(0,p.t-.1);const grd=ctx.createLinearGradient(xt,cy,x,cy);grd.addColorStop(0,p.color+'00');grd.addColorStop(1,p.color+'CC');ctx.strokeStyle=grd;ctx.lineWidth=2.5;ctx.beginPath();ctx.moveTo(xt,cy);ctx.lineTo(x,cy);ctx.stroke();ctx.fillStyle=p.color;ctx.shadowColor=p.color;ctx.shadowBlur=6;ctx.beginPath();ctx.arc(x,cy,3,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;}
+
+function draw(){ctx.clearRect(0,0,W,H);const ns=nodes();drawPipe(ns.shopify,ns.connector);drawPipe(ns.connector,ns.erpnext);particles.forEach(p=>drawParticle(p));drawNode(ns.shopify);drawNode(ns.connector);drawNode(ns.erpnext);}
+
+const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+function tick(){particles.forEach(p=>{p.t+=p.speed;if(p.t>1)p.t-=1;});draw();if(!reduced)requestAnimationFrame(tick);}
+resize();spawnParticles();reduced?draw():requestAnimationFrame(tick);
+window.addEventListener('resize',()=>{resize();spawnParticles();});
+
+/* ── SCROLLSPY ── */
+const sections=document.querySelectorAll('[id]');
+const links=document.querySelectorAll('.nav-a[href^="#"]');
+const spy=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting){const id=e.target.id;links.forEach(l=>l.classList.toggle('active',l.getAttribute('href')==='#'+id));}});},{rootMargin:'-15% 0px -75% 0px'});
+sections.forEach(s=>spy.observe(s));
+
+})();
+</script>

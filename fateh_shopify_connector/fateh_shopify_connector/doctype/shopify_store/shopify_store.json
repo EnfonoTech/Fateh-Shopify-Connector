@@ -1,0 +1,592 @@
+{
+ "actions": [],
+ "allow_import": 1,
+ "autoname": "field:shop_domain",
+ "creation": "2025-11-28 12:00:00",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "enabled",
+  "section_break_auth",
+  "shop_domain",
+  "api_version",
+  "column_break_auth",
+  "access_token",
+  "client_id",
+  "client_secret",
+  "callback_url",
+  "connected_user",
+  "oauth_status",
+  "shared_secret",
+  "section_break_erpnext",
+  "company",
+  "default_customer",
+  "customer_group",
+  "column_break_erpnext",
+  "cost_center",
+  "price_list",
+  "item_group",
+  "section_break_orders",
+  "sync_orders",
+  "sync_all_order_statuses",
+  "sales_order_series",
+  "delivery_note_series",
+  "sales_invoice_series",
+  "column_break_orders",
+  "last_order_sync",
+  "section_break_order_automation",
+  "auto_submit_sales_order",
+  "auto_create_invoice",
+  "auto_create_payment_entry",
+  "column_break_order_automation",
+  "add_shipping_as_item",
+  "shipping_item",
+  "auto_fulfill_remaining_qty",
+  "section_break_payment_methods",
+  "payment_method_mapping",
+  "section_break_inventory",
+  "enable_inventory_sync",
+  "inventory_sync_mode",
+  "warehouse",
+  "inventory_sync_frequency",
+  "column_break_inventory",
+  "last_inventory_sync",
+  "warehouse_mapping",
+  "section_break_item_sync",
+  "enable_item_sync",
+  "update_shopify_on_item_update",
+  "enable_image_sync",
+  "item_field_map",
+  "section_break_collections",
+  "collection_mapping",
+  "auto_create_collections",
+  "section_break_filters",
+  "item_filters",
+  "section_break_taxes",
+  "default_sales_tax_account",
+  "default_shipping_charges_account",
+  "write_off_account",
+  "tax_accounts",
+  "webhooks_section",
+  "shop_domain_alias",
+  "enable_webhook_orders_create",
+  "enable_webhook_orders_paid",
+  "enable_webhook_orders_cancelled",
+  "enable_webhook_fulfillment",
+  "webhooks_section_cb",
+  "webhooks_help"
+ ],
+ "fields": [
+  {
+   "default": "0",
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "label": "Enabled"
+  },
+  {
+   "fieldname": "section_break_auth",
+   "fieldtype": "Section Break",
+   "label": "Authentication"
+  },
+  {
+   "description": "e.g., mystore.myshopify.com",
+   "fieldname": "shop_domain",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Shop Domain",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "default": "2024-01",
+   "description": "Default \"2024-01\"",
+   "fieldname": "api_version",
+   "fieldtype": "Data",
+   "label": "API Version"
+  },
+  {
+   "fieldname": "column_break_auth",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "access_token",
+   "fieldtype": "Password",
+   "label": "Access Token",
+   "hidden": 1,
+   "read_only": 1
+  },
+  {
+   "description": "Client ID from Shopify Dev Dashboard",
+   "fieldname": "client_id",
+   "fieldtype": "Data",
+   "label": "Client ID",
+   "mandatory_depends_on": "eval:doc.enabled"
+  },
+  {
+   "description": "Client Secret from Shopify Dev Dashboard",
+   "fieldname": "client_secret",
+   "fieldtype": "Password",
+   "label": "Client Secret",
+   "mandatory_depends_on": "eval:doc.enabled"
+  },
+  {
+   "description": "Copy this URL to your Shopify app's Allowed redirection URL(s)",
+   "fieldname": "callback_url",
+   "fieldtype": "Data",
+   "label": "Callback URL",
+   "read_only": 1
+  },
+  {
+   "description": "User who authorized the OAuth connection",
+   "fieldname": "connected_user",
+   "fieldtype": "Link",
+   "label": "Connected User",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "default": "Not Connected",
+   "fieldname": "oauth_status",
+   "fieldtype": "Select",
+   "label": "OAuth Status",
+   "options": "Not Connected\nConnected",
+   "read_only": 1
+  },
+  {
+   "description": "For manual webhook HMAC validation. If set, overrides the Client Secret for OAuth stores.",
+   "fieldname": "shared_secret",
+   "fieldtype": "Data",
+   "label": "Shared Secret (Manual Override)"
+  },
+  {
+   "fieldname": "section_break_erpnext",
+   "fieldtype": "Section Break",
+   "label": "Fateh ERPNext Settings"
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Company",
+   "options": "Company",
+   "reqd": 1
+  },
+  {
+   "fieldname": "default_customer",
+   "fieldtype": "Link",
+   "label": "Default Customer",
+   "options": "Customer"
+  },
+  {
+   "fieldname": "customer_group",
+   "fieldtype": "Link",
+   "label": "Customer Group",
+   "options": "Customer Group"
+  },
+  {
+   "fieldname": "column_break_erpnext",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "cost_center",
+   "fieldtype": "Link",
+   "label": "Cost Center",
+   "options": "Cost Center"
+  },
+  {
+   "fieldname": "price_list",
+   "fieldtype": "Link",
+   "label": "Price List",
+   "options": "Price List"
+  },
+  {
+   "description": "Default item group for new items",
+   "fieldname": "item_group",
+   "fieldtype": "Link",
+   "label": "Item Group",
+   "options": "Item Group"
+  },
+  {
+   "fieldname": "section_break_orders",
+   "fieldtype": "Section Break",
+   "label": "Order Settings"
+  },
+  {
+   "default": "0",
+   "fieldname": "sync_orders",
+   "fieldtype": "Check",
+   "label": "Sync Orders"
+  },
+  {
+   "default": "0",
+   "depends_on": "eval:doc.sync_orders",
+   "description": "Sync all orders including fulfilled and closed. By default, only open orders are synced. Warning: Enabling this on first sync may import a large number of historical orders.",
+   "fieldname": "sync_all_order_statuses",
+   "fieldtype": "Check",
+   "label": "Sync All Order Statuses"
+  },
+  {
+   "fieldname": "sales_order_series",
+   "fieldtype": "Select",
+   "label": "Sales Order Series"
+  },
+  {
+   "fieldname": "delivery_note_series",
+   "fieldtype": "Select",
+   "label": "Delivery Note Series"
+  },
+  {
+   "fieldname": "sales_invoice_series",
+   "fieldtype": "Select",
+   "label": "Sales Invoice Series"
+  },
+  {
+   "fieldname": "column_break_orders",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "last_order_sync",
+   "fieldtype": "Datetime",
+   "label": "Last Order Sync"
+  },
+  {
+   "fieldname": "section_break_order_automation",
+   "fieldtype": "Section Break",
+   "label": "Order Automation"
+  },
+  {
+   "default": "0",
+   "depends_on": "eval:doc.sync_orders",
+   "description": "Automatically submit Sales Order for paid orders",
+   "fieldname": "auto_submit_sales_order",
+   "fieldtype": "Check",
+   "label": "Auto-submit Sales Order"
+  },
+  {
+   "default": "0",
+   "depends_on": "eval:doc.sync_orders && doc.auto_submit_sales_order",
+   "description": "Automatically create Sales Invoice for paid orders",
+   "fieldname": "auto_create_invoice",
+   "fieldtype": "Check",
+   "label": "Auto-create Invoice"
+  },
+  {
+   "default": "0",
+   "depends_on": "eval:doc.sync_orders && doc.auto_create_invoice",
+   "description": "Automatically create Payment Entry for paid orders",
+   "fieldname": "auto_create_payment_entry",
+   "fieldtype": "Check",
+   "label": "Auto-create Payment Entry"
+  },
+  {
+   "fieldname": "column_break_order_automation",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "depends_on": "eval:doc.sync_orders",
+   "description": "Add shipping charges as a line item instead of as tax",
+   "fieldname": "add_shipping_as_item",
+   "fieldtype": "Check",
+   "label": "Add Shipping as Item"
+  },
+  {
+   "depends_on": "eval:doc.add_shipping_as_item",
+   "description": "Item to use for shipping charges",
+   "fieldname": "shipping_item",
+   "fieldtype": "Link",
+   "label": "Shipping Item",
+   "mandatory_depends_on": "eval:doc.add_shipping_as_item",
+   "options": "Item"
+  },
+  {
+   "default": "0",
+   "depends_on": "eval:doc.enable_webhook_fulfillment",
+   "description": "When enabled, fulfillment webhooks will create Delivery Notes for remaining undelivered quantities even if other Delivery Notes exist. When disabled (default), no Delivery Note will be auto-created if any DN already exists for the Sales Order.",
+   "fieldname": "auto_fulfill_remaining_qty",
+   "fieldtype": "Check",
+   "label": "Auto-create Delivery Notes for Remaining Qty"
+  },
+  {
+   "depends_on": "eval:doc.auto_create_payment_entry",
+   "fieldname": "section_break_payment_methods",
+   "fieldtype": "Section Break",
+   "label": "Payment Method Mapping"
+  },
+  {
+   "depends_on": "eval:doc.auto_create_payment_entry",
+   "description": "Map Shopify payment gateways to ERPNext Mode of Payment. Payment entries will fail if a gateway is not mapped.",
+   "fieldname": "payment_method_mapping",
+   "fieldtype": "Table",
+   "label": "Payment Method Mapping",
+   "options": "Shopify Store Payment Method Mapping"
+  },
+  {
+   "fieldname": "section_break_inventory",
+   "fieldtype": "Section Break",
+   "label": "Inventory Settings"
+  },
+  {
+   "default": "0",
+   "fieldname": "enable_inventory_sync",
+   "fieldtype": "Check",
+   "label": "Enable Inventory Sync"
+  },
+  {
+   "default": "Full Inventory",
+   "description": "Full Inventory syncs every mapped item. Changed Bins syncs only items whose stock Bin or Shopify mapping changed since the last successful inventory sync.",
+   "fieldname": "inventory_sync_mode",
+   "fieldtype": "Select",
+   "label": "Inventory Sync Mode",
+   "options": "Full Inventory\nChanged Bins"
+  },
+  {
+   "fieldname": "warehouse",
+   "fieldtype": "Link",
+   "label": "Default Warehouse",
+   "options": "Warehouse"
+  },
+  {
+   "default": "60",
+   "description": "Sync interval in minutes (default 60). Inventory is batched via GraphQL (250 items per call), so most stores complete in well under a minute even with thousands of items.",
+   "fieldname": "inventory_sync_frequency",
+   "fieldtype": "Int",
+   "label": "Inventory Sync Frequency"
+  },
+  {
+   "fieldname": "column_break_inventory",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "last_inventory_sync",
+   "fieldtype": "Datetime",
+   "label": "Last Inventory Sync",
+   "read_only": 1
+  },
+  {
+   "fieldname": "warehouse_mapping",
+   "fieldtype": "Table",
+   "label": "Warehouse Mapping",
+   "options": "Shopify Store Warehouse Mapping"
+  },
+  {
+   "fieldname": "section_break_item_sync",
+   "fieldtype": "Section Break",
+   "label": "Item Sync Settings"
+  },
+  {
+   "default": "0",
+   "fieldname": "enable_item_sync",
+   "fieldtype": "Check",
+   "label": "Enable Item Sync"
+  },
+  {
+   "default": "0",
+   "fieldname": "update_shopify_on_item_update",
+   "fieldtype": "Check",
+   "label": "Update Shopify on Item Update"
+  },
+  {
+   "default": "0",
+   "depends_on": "eval:doc.enable_item_sync",
+   "description": "Sync item images to Shopify products",
+   "fieldname": "enable_image_sync",
+   "fieldtype": "Check",
+   "label": "Enable Image Sync"
+  },
+  {
+   "allow_bulk_edit": 1,
+   "fieldname": "item_field_map",
+   "fieldtype": "Table",
+   "label": "Item Field Mapping",
+   "options": "Shopify Store Item Field"
+  },
+  {
+   "fieldname": "section_break_collections",
+   "fieldtype": "Section Break",
+   "label": "Collection Mapping"
+  },
+  {
+   "allow_bulk_edit": 1,
+   "description": "Map ERPNext field values to Shopify Collections",
+   "fieldname": "collection_mapping",
+   "fieldtype": "Table",
+   "label": "Collection Mapping",
+   "options": "Shopify Store Collection Mapping"
+  },
+  {
+   "default": "0",
+   "description": "Automatically create collections on Shopify when a collection value is not found in the mapping",
+   "fieldname": "auto_create_collections",
+   "fieldtype": "Check",
+   "label": "Auto-create Missing Collections"
+  },
+  {
+   "fieldname": "section_break_filters",
+   "fieldtype": "Section Break",
+   "label": "Item Eligibility Filters"
+  },
+  {
+   "description": "Define automatic eligibility rules for which items sync to this store",
+   "fieldname": "item_filters",
+   "fieldtype": "Table",
+   "label": "Item Filters",
+   "options": "Shopify Store Item Filter"
+  },
+  {
+   "fieldname": "section_break_taxes",
+   "fieldtype": "Section Break",
+   "label": "Tax Settings"
+  },
+  {
+   "fieldname": "default_sales_tax_account",
+   "fieldtype": "Link",
+   "label": "Default Sales Tax Account",
+   "options": "Account"
+  },
+  {
+   "fieldname": "default_shipping_charges_account",
+   "fieldtype": "Link",
+   "label": "Default Shipping Charges Account",
+   "options": "Account"
+  },
+  {
+   "description": "Account for rounding adjustments during order sync. Falls back to Company's Write Off Account if not set.",
+   "fieldname": "write_off_account",
+   "fieldtype": "Link",
+   "label": "Write Off Account",
+   "options": "Account"
+  },
+  {
+   "fieldname": "tax_accounts",
+   "fieldtype": "Table",
+   "label": "Tax Accounts",
+   "options": "Shopify Store Tax Account"
+  },
+  {
+   "fieldname": "webhooks_section",
+   "fieldtype": "Section Break",
+   "label": "Webhook Events"
+  },
+  {
+   "description": "Alternate .myshopify.com domain for webhook routing (e.g., if store was renamed or migrated)",
+   "fieldname": "shop_domain_alias",
+   "fieldtype": "Data",
+   "label": "Shop Domain Alias"
+  },
+  {
+   "default": "1",
+   "description": "Process orders/create webhook events",
+   "fieldname": "enable_webhook_orders_create",
+   "fieldtype": "Check",
+   "label": "Process Order Create Webhooks"
+  },
+  {
+   "default": "1",
+   "description": "Process orders/paid webhook events",
+   "fieldname": "enable_webhook_orders_paid",
+   "fieldtype": "Check",
+   "label": "Process Order Paid Webhooks"
+  },
+  {
+   "default": "1",
+   "description": "Process orders/cancelled webhook events",
+   "fieldname": "enable_webhook_orders_cancelled",
+   "fieldtype": "Check",
+   "label": "Process Order Cancelled Webhooks"
+  },
+  {
+   "default": "1",
+   "description": "Process orders/fulfilled and orders/partially_fulfilled webhook events",
+   "fieldname": "enable_webhook_fulfillment",
+   "fieldtype": "Check",
+   "label": "Process Fulfillment Webhooks"
+  },
+  {
+   "fieldname": "webhooks_section_cb",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "webhooks_help",
+   "fieldtype": "HTML",
+   "label": "Webhook Help",
+   "options": "<p class=\"text-muted\">These settings control which webhook events are registered with Shopify and processed when received. Disabling an event will unregister it from Shopify (on next webhook registration) and skip processing any incoming events of that type.</p>"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [
+  {
+   "link_doctype": "Sales Order",
+   "link_fieldname": "shopify_store"
+  },
+  {
+   "link_doctype": "Item",
+   "link_fieldname": "shopify_store",
+   "table_fieldname": "shopify_stores"
+  },
+  {
+   "link_doctype": "Fateh Shopify Log",
+   "link_fieldname": "shopify_store"
+  }
+ ],
+ "modified": "2026-06-18 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Fateh Shopify Connector",
+ "name": "Shopify Store",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "import": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Sales Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Sales User"
+  },
+  {
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Accounts Manager"
+  },
+  {
+   "read": 1,
+   "report": 1,
+   "role": "Accounts User"
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "import": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}
