@@ -7,7 +7,7 @@ frappe.ui.form.on("Shopify Store", {
 
 		// Add custom buttons
 		if (!frm.is_new()) {
-			if (frm.doc.client_id) {
+			if (frm.doc.auth_method === "OAuth") {
 				frm.add_custom_button(
 					__("Connect to Shopify"),
 					() => {
@@ -419,13 +419,22 @@ frappe.ui.form.on("Shopify Store", {
 		});
 	},
 
+	auth_method(frm) {
+		// Reload to apply depends_on visibility changes immediately
+		frm.refresh_fields(["access_token", "client_id", "client_secret", "callback_url", "connected_user", "oauth_status"]);
+		frm.trigger("show_oauth_status");
+	},
+
 	show_oauth_status(frm) {
+		if (frm.doc.auth_method !== "OAuth") {
+			return;
+		}
 		if (frm.doc.oauth_status === "Connected" && frm.doc.connected_user) {
 			frm.dashboard.set_headline_alert(
 				__("Connected to Shopify via OAuth as {0}", [frm.doc.connected_user]),
 				"green"
 			);
-		} else if (frm.doc.client_id) {
+		} else {
 			frm.dashboard.set_headline_alert(
 				__(
 					"OAuth configured but not connected. Click 'Connect to Shopify' under Actions to authorize."

@@ -11,6 +11,7 @@
   "section_break_auth",
   "shop_domain",
   "api_version",
+  "auth_method",
   "column_break_auth",
   "access_token",
   "client_id",
@@ -106,31 +107,43 @@
    "label": "API Version"
   },
   {
+   "default": "OAuth",
+   "fieldname": "auth_method",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Authentication Method",
+   "options": "OAuth\nLegacy (Access Token)",
+   "reqd": 1
+  },
+  {
    "fieldname": "column_break_auth",
    "fieldtype": "Column Break"
   },
   {
+   "depends_on": "eval:doc.auth_method == 'Legacy (Access Token)'",
    "fieldname": "access_token",
    "fieldtype": "Password",
    "label": "Access Token",
-   "hidden": 1,
-   "read_only": 1
+   "mandatory_depends_on": "eval:doc.auth_method == 'Legacy (Access Token)' && doc.enabled"
   },
   {
+   "depends_on": "eval:doc.auth_method == 'OAuth'",
    "description": "Client ID from Shopify Dev Dashboard",
    "fieldname": "client_id",
    "fieldtype": "Data",
    "label": "Client ID",
-   "mandatory_depends_on": "eval:doc.enabled"
+   "mandatory_depends_on": "eval:doc.auth_method == 'OAuth' && doc.enabled"
   },
   {
+   "depends_on": "eval:doc.auth_method == 'OAuth'",
    "description": "Client Secret from Shopify Dev Dashboard",
    "fieldname": "client_secret",
    "fieldtype": "Password",
    "label": "Client Secret",
-   "mandatory_depends_on": "eval:doc.enabled"
+   "mandatory_depends_on": "eval:doc.auth_method == 'OAuth' && doc.enabled"
   },
   {
+   "depends_on": "eval:doc.auth_method == 'OAuth'",
    "description": "Copy this URL to your Shopify app's Allowed redirection URL(s)",
    "fieldname": "callback_url",
    "fieldtype": "Data",
@@ -138,6 +151,7 @@
    "read_only": 1
   },
   {
+   "depends_on": "eval:doc.auth_method == 'OAuth'",
    "description": "User who authorized the OAuth connection",
    "fieldname": "connected_user",
    "fieldtype": "Link",
@@ -147,6 +161,7 @@
   },
   {
    "default": "Not Connected",
+   "depends_on": "eval:doc.auth_method == 'OAuth'",
    "fieldname": "oauth_status",
    "fieldtype": "Select",
    "label": "OAuth Status",

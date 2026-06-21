@@ -47,6 +47,7 @@ class ShopifyStore(Document):
 		access_token: DF.Password | None
 		add_shipping_as_item: DF.Check
 		api_version: DF.Data | None
+		auth_method: DF.Data
 		auto_create_collections: DF.Check
 		auto_create_invoice: DF.Check
 		auto_create_payment_entry: DF.Check
@@ -152,22 +153,20 @@ class ShopifyStore(Document):
 			frappe.throw(_("This alias is already used in store: {0}").format(existing))
 
 	def validate_auth_method(self):
-		"""Validate and clean up fields based on authentication method."""
-		auth_method = self.get("auth_method") or "Legacy (Access Token)"
+		"""Validate fields based on authentication method."""
+		auth_method = self.auth_method or "OAuth"
 
 		if auth_method == "OAuth":
 			self.callback_url = get_callback_url()
+			# Clear legacy-only field
+			self.access_token = None
 		else:
-			# Clear OAuth fields when using Legacy access token
-			if self.client_id:
-				self.client_id = None
-			if self.client_secret:
-				self.client_secret = None
-			if self.callback_url:
-				self.callback_url = None
-			if self.connected_user:
-				self.connected_user = None
-			if self.get("oauth_status") and self.oauth_status != "Not Connected":
+			# Legacy (Access Token) — clear OAuth-specific fields
+			self.client_id = None
+			self.client_secret = None
+			self.callback_url = None
+			self.connected_user = None
+			if self.oauth_status != "Not Connected":
 				self.oauth_status = "Not Connected"
 
 	def validate_payment_method_mapping(self):
