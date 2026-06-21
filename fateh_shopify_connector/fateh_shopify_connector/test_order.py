@@ -1,4 +1,4 @@
-# Copyright (c) 2025, HighFlyer and Contributors
+# Copyright (c) 2024, siva@enfono.com and contributors
 # See license.txt
 
 import frappe

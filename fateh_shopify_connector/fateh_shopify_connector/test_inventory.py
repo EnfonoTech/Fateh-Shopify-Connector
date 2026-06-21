@@ -1,4 +1,4 @@
-# Copyright (c) 2024, HighFlyer and contributors
+# Copyright (c) 2024, siva@enfono.com and contributors
 # For license information, please see license.txt
 
 """Integration tests for sync_store_inventory and sync_single_item_inventory.
