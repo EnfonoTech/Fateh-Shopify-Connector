@@ -9,9 +9,6 @@ from erpnext.accounts.utils import get_currency_precision
 from frappe import _
 from frappe.model.document import Document
 from frappe.utils import add_days, cint, cstr, flt, get_datetime, get_system_timezone, getdate, now, nowdate
-from shopify.collection import PaginatedIterator
-from shopify.resources import Order
-from shopify.session import Session
 
 from fateh_shopify_connector.fateh_shopify_connector.connection import DEFAULT_API_VERSION
 from fateh_shopify_connector.fateh_shopify_connector.fulfillment import create_delivery_notes_from_fulfillments
@@ -606,6 +603,10 @@ def sync_new_orders(shopify_store: str, from_date=None, to_date=None) -> dict:
 
 	api_version = store.api_version or DEFAULT_API_VERSION
 	auth_details = (store.shop_domain, api_version, store.get_password("access_token"))
+
+	from shopify.collection import PaginatedIterator
+	from shopify.resources import Order
+	from shopify.session import Session
 
 	with Session.temp(*auth_details):
 		# Build query params
@@ -1616,9 +1617,10 @@ def _fetch_order_transactions(order_id, store) -> list[dict]:
 		ShopifyTransactionFetchError: Wraps any underlying SDK / HTTP / parsing
 			error so the caller can decide how to handle it.
 	"""
-	logger = get_logger()
 	from shopify.resources import Transaction
+	from shopify.session import Session
 
+	logger = get_logger()
 	api_version = store.api_version or DEFAULT_API_VERSION
 
 	logger.info(
@@ -1628,6 +1630,7 @@ def _fetch_order_transactions(order_id, store) -> list[dict]:
 	)
 
 	try:
+
 		auth_details = (store.shop_domain, api_version, store.get_password("access_token"))
 		with Session.temp(*auth_details):
 			txns = Transaction.find(order_id=order_id)

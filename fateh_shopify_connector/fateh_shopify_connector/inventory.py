@@ -8,8 +8,6 @@ from typing import TYPE_CHECKING
 import frappe
 from frappe import _
 from frappe.utils import add_to_date, flt, now_datetime
-from shopify.api_version import ApiVersion
-from shopify.session import Session
 
 from fateh_shopify_connector.fateh_shopify_connector.connection import DEFAULT_API_VERSION
 from fateh_shopify_connector.fateh_shopify_connector.inventory_graphql import (
@@ -187,6 +185,8 @@ def sync_store_inventory(store_name: str, force: bool = False):
 	qty_by_pair = _bulk_get_stock_qty(pairs)
 
 	try:
+		from shopify.session import Session
+
 		with Session.temp(store.shop_domain, api_version, access_token):
 			# Lazy backfill: fill shopify_inventory_item_id on rows that are empty.
 			items_to_sync, skipped_backfill, errored_backfill = _resolve_inventory_item_ids(
@@ -490,6 +490,8 @@ def sync_items_inventory(
 		pairs = [(item["item_code"], wh) for item in items_to_sync for (_loc, wh) in location_mapping]
 		qty_by_pair = _bulk_get_stock_qty(pairs)
 		timestamp_iso = now_datetime().isoformat()
+
+		from shopify.session import Session
 
 		with Session.temp(store.shop_domain, api_version, access_token):
 			items_to_sync, skipped_backfill, errored_backfill = _resolve_inventory_item_ids(
@@ -951,6 +953,8 @@ def _chunked(seq, size):
 
 def _init_shopify_api_versions():
 	"""Initialize Shopify API versions if not already loaded."""
+	from shopify.api_version import ApiVersion
+
 	if not ApiVersion.versions:
 		ApiVersion.fetch_known_versions()
 
@@ -1164,6 +1168,8 @@ def sync_single_item_inventory(item_code: str, store_name: str | None = None):
 		timestamp_iso = now_datetime().isoformat()
 
 		try:
+			from shopify.session import Session
+
 			with Session.temp(store.shop_domain, api_version, access_token):
 				items_payload, skipped, errored = _resolve_inventory_item_ids(
 					store.name, items_payload, logger

@@ -13,8 +13,6 @@ import json
 from dataclasses import dataclass, field
 from typing import Any
 
-import shopify
-
 # Public constants
 INVENTORY_BATCH_SIZE = 250
 NODES_BATCH_SIZE = 250
@@ -152,6 +150,8 @@ def execute_graphql(query: str, variables: dict[str, Any]) -> dict:
 	  handler rather than being silently retried as "network error".
 	"""
 	try:
+		import shopify
+
 		client = shopify.GraphQL()
 		result_str = client.execute(query=query, variables=variables)
 		result = json.loads(result_str)

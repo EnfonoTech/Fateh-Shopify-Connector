@@ -10,9 +10,6 @@ from typing import TYPE_CHECKING, Any
 import frappe
 from frappe import _
 from frappe.utils import now_datetime
-from shopify.api_version import ApiVersion
-from shopify.resources import Collect, CustomCollection, Image, Metafield, Product, Variant
-from shopify.session import Session
 
 from fateh_shopify_connector.fateh_shopify_connector.connection import DEFAULT_API_VERSION
 from fateh_shopify_connector.fateh_shopify_connector.utils import (
@@ -212,6 +209,8 @@ def sync_item_to_store(item_code: str, store_name: str, force: bool = False):
 		return
 
 	try:
+		from shopify.session import Session
+
 		with Session.temp(store.shop_domain, api_version, access_token):
 			# Build product payload
 			product_data, variant_data, metafields_data, category_value, collections_field = (
@@ -286,13 +285,15 @@ def sync_item_to_store(item_code: str, store_name: str, force: bool = False):
 
 def _init_shopify_api_versions():
 	"""Initialize Shopify API versions if not already loaded."""
+	from shopify.api_version import ApiVersion
+
 	if not ApiVersion.versions:
 		ApiVersion.fetch_known_versions()
 
 
 def _create_shopify_product(
 	product_data: dict[str, Any], variant_data: dict[str, Any], metafields_data: list[dict[str, Any]]
-) -> Product:
+) -> Any:
 	"""
 	Create a new product in Shopify.
 
@@ -306,6 +307,8 @@ def _create_shopify_product(
 	"""
 	# Create product with product-level data only (no variants)
 	# Shopify auto-creates a default variant when product is saved
+	from shopify.resources import Metafield, Product
+
 	logger = get_logger()
 	product = Product()
 	for key, value in product_data.items():
@@ -354,7 +357,7 @@ def _update_shopify_product(
 	product_data: dict[str, Any],
 	variant_data: dict[str, Any],
 	metafields_data: list[dict[str, Any]],
-) -> Product:
+) -> Any:
 	"""
 	Update an existing product in Shopify.
 
@@ -368,6 +371,8 @@ def _update_shopify_product(
 	Returns:
 		Updated Product resource
 	"""
+	from shopify.resources import Metafield, Product, Variant
+
 	logger = get_logger()
 	product = Product.find(product_id)
 
@@ -688,6 +693,8 @@ def _create_shopify_collection_and_mapping(store, collection_name: str) -> str |
 		Shopify collection ID if successful, None otherwise
 	"""
 	try:
+		from shopify.resources import CustomCollection
+
 		# Create collection on Shopify
 		collection = CustomCollection()
 		collection.title = collection_name
@@ -782,6 +789,8 @@ def _sync_product_collections(product_id: str, item, store, collections_field: s
 				collection_lookup[value] = new_collection_id
 
 	# Get current product-collection relationships using SDK
+	from shopify.resources import Collect
+
 	try:
 		current_collects = Collect.find(product_id=product_id)
 	except Exception:
@@ -961,6 +970,8 @@ def _sync_product_image(product_id: str, image_data: str, filename: str) -> bool
 	Returns:
 		True if successful, False otherwise
 	"""
+	from shopify.resources import Image
+
 	logger = get_logger()
 
 	# Create new image

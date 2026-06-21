@@ -397,7 +397,7 @@ frappe.ui.form.on("Shopify Store", {
 
 		// Call our authorize endpoint
 		frappe.call({
-			method: "fateh_shopify_connector.fateh_shopify.oauth.authorize",
+			method: "fateh_shopify_connector.fateh_shopify_connector.oauth.authorize",
 			args: {
 				shopify_store: frm.doc.name,
 			},
