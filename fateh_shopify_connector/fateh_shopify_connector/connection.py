@@ -10,8 +10,6 @@ import json
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from shopify.resources import Webhook
-from shopify.session import Session
 
 from fateh_shopify_connector.fateh_shopify_connector.utils import create_shopify_log
 from fateh_shopify_connector.utils.logger import get_logger
@@ -89,6 +87,8 @@ def shopify_session(shopify_store: str | Document | None = None, allow_implicit:
 			auth_details = (store.shop_domain, api_version, access_token)
 
 			try:
+				from shopify.session import Session
+
 				with Session.temp(*auth_details):
 					return func(*args, **kwargs)
 			finally:
@@ -276,7 +276,7 @@ def get_current_domain_name() -> str:
 		return frappe.request.host
 
 
-def register_webhooks(store: Document) -> list[Webhook]:
+def register_webhooks(store: Document) -> list:
 	"""
 	Register required webhooks with Shopify for a specific store.
 
@@ -306,6 +306,9 @@ def register_webhooks(store: Document) -> list[Webhook]:
 		enabled_events,
 	)
 
+	from shopify.resources import Webhook
+	from shopify.session import Session
+
 	api_version = store.api_version or DEFAULT_API_VERSION
 	auth_details = (store.shop_domain, api_version, store.get_password("access_token"))
 
@@ -333,6 +336,9 @@ def unregister_webhooks(store: Document) -> None:
 	Args:
 		store: Shopify Store document
 	"""
+	from shopify.resources import Webhook
+	from shopify.session import Session
+
 	url = get_current_domain_name()
 	api_version = store.api_version or DEFAULT_API_VERSION
 	auth_details = (store.shop_domain, api_version, store.get_password("access_token"))
