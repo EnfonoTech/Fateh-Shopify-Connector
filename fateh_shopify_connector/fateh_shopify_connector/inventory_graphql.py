@@ -57,6 +57,26 @@ query variantInventoryItems($ids: [ID!]!) {
 }
 """
 
+# Fetches current available quantities per inventory item × location.
+# Required by inventorySetQuantities as changeFromQuantity (optimistic lock).
+INVENTORY_QUANTITIES_QUERY = """
+query inventoryItemQuantities($ids: [ID!]!) {
+  nodes(ids: $ids) {
+    ... on InventoryItem {
+      id
+      inventoryLevels(first: 50) {
+        nodes {
+          location { id }
+          quantities(names: ["available"]) {
+            quantity
+          }
+        }
+      }
+    }
+  }
+}
+"""
+
 
 @dataclass
 class ThrottleStatus:
@@ -212,6 +232,7 @@ def set_inventory_batch(
 	quantities: list[dict],
 	store_name: str,
 	timestamp_iso: str,
+	current_quantities: dict | None = None,
 	logger=None,
 ) -> BatchResult:
 	"""
@@ -223,6 +244,9 @@ def set_inventory_batch(
 			source rows; it is NOT sent to Shopify.
 		store_name: For referenceDocumentUri.
 		timestamp_iso: For referenceDocumentUri.
+		current_quantities: Dict mapping (inventory_item_id, location_id) -> int.
+			Required by Shopify API 2024-04+ as changeFromQuantity (optimistic lock).
+			Obtained via fetch_quantities_for_items(). Defaults to 0 if not found.
 		logger: Optional frappe logger.
 
 	Returns:
@@ -244,11 +268,15 @@ def set_inventory_batch(
 			f"Chunk the input via _chunked() before calling."
 		)
 
+	_current = current_quantities or {}
 	graphql_quantities = [
 		{
 			"inventoryItemId": f"gid://shopify/InventoryItem/{q['inventory_item_id']}",
 			"locationId": f"gid://shopify/Location/{q['location_id']}",
 			"quantity": int(q["qty"]),
+			# Shopify 2024-04+ requires changeFromQuantity (expected current qty).
+			# Use fetched value; fall back to 0 if not found in Shopify (new item).
+			"changeFromQuantity": _current.get((q["inventory_item_id"], q["location_id"]), 0),
 		}
 		for q in quantities
 	]
@@ -403,5 +431,59 @@ def fetch_inventory_item_ids(
 				len(missing),
 				len(variant_ids),
 			)
+
+	return result
+
+
+def fetch_quantities_for_items(
+	inventory_item_ids: list[str],
+	logger=None,
+) -> dict:
+	"""
+	Fetch current 'available' quantities for inventory items across all locations.
+
+	Required by Shopify API 2024-04+ as changeFromQuantity in inventorySetQuantities.
+
+	Args:
+		inventory_item_ids: Numeric inventory item ID strings.
+
+	Returns:
+		Dict mapping (inventory_item_id, location_id) -> int quantity.
+		Missing pairs default to 0 in callers.
+	"""
+	if not inventory_item_ids:
+		return {}
+
+	gids = [f"gid://shopify/InventoryItem/{iid}" for iid in inventory_item_ids]
+	try:
+		response = execute_graphql(INVENTORY_QUANTITIES_QUERY, {"ids": gids})
+	except Exception as e:
+		if logger:
+			logger.warning("fetch_quantities_for_items failed: %s — will use 0 as changeFromQuantity", e)
+		return {}
+
+	data = (response or {}).get("data") or {}
+	nodes = data.get("nodes") or []
+
+	result: dict = {}
+	for node in nodes:
+		if not node or not isinstance(node, dict):
+			continue
+		item_gid = node.get("id") or ""
+		if not item_gid.startswith("gid://shopify/InventoryItem/"):
+			continue
+		inventory_item_id = item_gid.rsplit("/", 1)[-1]
+
+		levels = (node.get("inventoryLevels") or {}).get("nodes") or []
+		for level in levels:
+			loc_gid = (level.get("location") or {}).get("id") or ""
+			if not loc_gid.startswith("gid://shopify/Location/"):
+				continue
+			location_id = loc_gid.rsplit("/", 1)[-1]
+
+			for q in level.get("quantities") or []:
+				qty = q.get("quantity")
+				if qty is not None:
+					result[(inventory_item_id, location_id)] = int(qty)
 
 	return result

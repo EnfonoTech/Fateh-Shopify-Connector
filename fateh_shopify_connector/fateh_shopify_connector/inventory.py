@@ -18,6 +18,7 @@ from fateh_shopify_connector.fateh_shopify_connector.inventory_graphql import (
 	ShopifyGraphQLError,
 	ThrottleStatus,
 	fetch_inventory_item_ids,
+	fetch_quantities_for_items,
 	set_inventory_batch,
 )
 from fateh_shopify_connector.fateh_shopify_connector.utils import create_shopify_log
@@ -219,12 +220,16 @@ def sync_store_inventory(store_name: str, force: bool = False):
 				num_batches = max(1, math.ceil(len(qty_entries) / INVENTORY_BATCH_SIZE))
 				for i, chunk in enumerate(_chunked(qty_entries, INVENTORY_BATCH_SIZE), start=1):
 					batch_t0 = time.monotonic()
+					# Fetch current Shopify quantities — required by API 2024-04+ as changeFromQuantity
+					inv_item_ids = [q["inventory_item_id"] for q in chunk]
+					current_qtys = fetch_quantities_for_items(inv_item_ids, logger=logger)
 					try:
 						result = _execute_batch_with_retry(
 							chunk=chunk,
 							store_name=store_name,
 							timestamp_iso=timestamp_iso,
 							logger=logger,
+							current_quantities=current_qtys,
 						)
 					except ShopifyGraphQLError as e:
 						# Whole batch failed after retries
@@ -520,12 +525,16 @@ def sync_items_inventory(
 				num_batches = max(1, math.ceil(len(qty_entries) / INVENTORY_BATCH_SIZE))
 				for i, chunk in enumerate(_chunked(qty_entries, INVENTORY_BATCH_SIZE), start=1):
 					batch_t0 = time.monotonic()
+					# Fetch current Shopify quantities — required by API 2024-04+ as changeFromQuantity
+					inv_item_ids = [q["inventory_item_id"] for q in chunk]
+					current_qtys = fetch_quantities_for_items(inv_item_ids, logger=logger)
 					try:
 						result = _execute_batch_with_retry(
 							chunk=chunk,
 							store_name=store_name,
 							timestamp_iso=timestamp_iso,
 							logger=logger,
+							current_quantities=current_qtys,
 						)
 					except ShopifyGraphQLError as e:
 						stats["errors"] += len(chunk)
@@ -656,6 +665,7 @@ def _execute_batch_with_retry(
 	store_name: str,
 	timestamp_iso: str,
 	logger,
+	current_quantities: dict | None = None,
 ) -> BatchResult:
 	"""Wrap set_inventory_batch with retry logic.
 
@@ -672,7 +682,7 @@ def _execute_batch_with_retry(
 	last_error: ShopifyGraphQLError | None = None
 	for attempt in range(3):
 		try:
-			return set_inventory_batch(chunk, store_name, timestamp_iso, logger)
+			return set_inventory_batch(chunk, store_name, timestamp_iso, current_quantities, logger)
 		except ShopifyGraphQLError as e:
 			last_error = e
 			status = e.http_status
@@ -1204,12 +1214,16 @@ def sync_single_item_inventory(item_code: str, store_name: str | None = None):
 					)
 					if not qty_entries:
 						continue
+					# Fetch current Shopify quantities — required by API 2024-04+ as changeFromQuantity
+					inv_item_ids = [q["inventory_item_id"] for q in qty_entries]
+					current_qtys = fetch_quantities_for_items(inv_item_ids, logger=logger)
 					try:
 						result = _execute_batch_with_retry(
 							chunk=qty_entries,
 							store_name=store.name,
 							timestamp_iso=timestamp_iso,
 							logger=logger,
+							current_quantities=current_qtys,
 						)
 					except ShopifyGraphQLError as e:
 						logger.error(
