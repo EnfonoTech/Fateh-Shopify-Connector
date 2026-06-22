@@ -231,6 +231,9 @@ class ShopifyStore(Document):
 				)
 				logger.info("Connection successful! Shopify store: %s", self.shop_domain)
 
+		except frappe.ValidationError:
+			# Auth/config errors already have a clear message — re-raise as-is
+			raise
 		except Exception as e:
 			logger.error(
 				"Connection failed for Shopify store: %s, error: %s", self.shop_domain, str(e), exc_info=True
