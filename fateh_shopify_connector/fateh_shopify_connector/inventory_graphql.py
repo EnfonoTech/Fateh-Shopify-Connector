@@ -9,6 +9,7 @@ and exposing throttle state. Called from within an existing
 Session.temp() context; no auth handling here.
 """
 
+import hashlib
 import json
 from dataclasses import dataclass, field
 from typing import Any
@@ -20,8 +21,8 @@ THROTTLE_MIN_AVAILABLE = 200  # pause below this; typical bucket is 1000
 DEFAULT_RESTORE_RATE = 50.0
 
 INVENTORY_SET_MUTATION = """
-mutation inventorySetQuantities($input: InventorySetQuantitiesInput!) @idempotent {
-  inventorySetQuantities(input: $input) {
+mutation inventorySetQuantities($input: InventorySetQuantitiesInput!, $idempotencyKey: String!) {
+  inventorySetQuantities(input: $input) @idempotent(key: $idempotencyKey) {
     inventoryAdjustmentGroup {
       createdAt
       reason
@@ -281,7 +282,13 @@ def set_inventory_batch(
 		for q in quantities
 	]
 
+	# Generate a stable idempotency key for this batch so retries don't double-apply.
+	# Key is deterministic: same inputs always produce the same key.
+	key_parts = f"{store_name}:{timestamp_iso}:{','.join(sorted(q['inventory_item_id'] for q in quantities))}"
+	idempotency_key = hashlib.md5(key_parts.encode()).hexdigest()
+
 	variables = {
+		"idempotencyKey": idempotency_key,
 		"input": {
 			"name": "available",
 			"reason": "correction",
