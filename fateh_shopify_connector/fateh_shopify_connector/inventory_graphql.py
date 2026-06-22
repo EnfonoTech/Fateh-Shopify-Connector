@@ -20,7 +20,7 @@ THROTTLE_MIN_AVAILABLE = 200  # pause below this; typical bucket is 1000
 DEFAULT_RESTORE_RATE = 50.0
 
 INVENTORY_SET_MUTATION = """
-mutation inventorySetQuantities($input: InventorySetQuantitiesInput!) {
+mutation inventorySetQuantities($input: InventorySetQuantitiesInput!) @idempotent {
   inventorySetQuantities(input: $input) {
     inventoryAdjustmentGroup {
       createdAt
