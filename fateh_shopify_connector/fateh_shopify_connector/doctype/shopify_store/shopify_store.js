@@ -200,15 +200,10 @@ frappe.ui.form.on("Shopify Store", {
 					function () {
 						frappe.confirm(
 							__(
-								"This will sync all eligible items to Shopify. This may take a while for large catalogs. Continue?"
+								"This will sync all eligible items to Shopify. Progress will be shown in real time. Continue?"
 							),
 							function () {
-								frm.call({
-									method: "sync_all_items",
-									doc: frm.doc,
-									freeze: true,
-									freeze_message: __("Queuing items for sync..."),
-								});
+								frm.trigger("start_item_sync");
 							}
 						);
 					},
@@ -442,6 +437,90 @@ frappe.ui.form.on("Shopify Store", {
 				"yellow"
 			);
 		}
+	},
+
+	start_item_sync(frm) {
+		// Build the progress dialog
+		let dialog = new frappe.ui.Dialog({
+			title: __("Syncing Items to Shopify"),
+			size: "large",
+			fields: [
+				{ fieldtype: "HTML", fieldname: "progress_html" },
+				{ fieldtype: "HTML", fieldname: "log_html" },
+			],
+		});
+
+		let logLines = [];
+		const MAX_LOG = 120;
+
+		function renderProgress(data) {
+			let pct = data.total ? Math.round((data.done / data.total) * 100) : 0;
+			let barColor = data.errors > 0 ? "var(--yellow-500)" : "var(--primary)";
+
+			dialog.fields_dict.progress_html.$wrapper.html(`
+				<div style="padding: 12px 0;">
+					<div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+						<span>${__("Progress")}: <b>${data.done} / ${data.total}</b></span>
+						<span style="color:var(--red-500);">${__("Errors")}: <b>${data.errors}</b></span>
+						<span><b>${pct}%</b></span>
+					</div>
+					<div style="background:var(--gray-200); border-radius:4px; height:12px; overflow:hidden;">
+						<div style="width:${pct}%; background:${barColor}; height:100%; transition:width 0.3s;"></div>
+					</div>
+					${data.current_item && data.status === "running"
+						? `<div style="margin-top:6px; color:var(--text-muted); font-size:12px;">${__("Syncing")}: ${frappe.utils.escape_html(data.current_item)}</div>`
+						: ""}
+					${data.status === "done"
+						? `<div style="margin-top:8px; color:var(--green-600); font-weight:600;">${__("✓ Sync complete")}</div>`
+						: ""}
+				</div>
+			`);
+		}
+
+		function renderLog() {
+			dialog.fields_dict.log_html.$wrapper.html(`
+				<div style="font-family:monospace; font-size:11px; max-height:220px; overflow-y:auto;
+					background:var(--gray-50); border:1px solid var(--gray-200); border-radius:4px; padding:8px;">
+					${logLines.map(l => frappe.utils.escape_html(l)).join("<br>")}
+				</div>
+			`);
+		}
+
+		// Subscribe to real-time progress events
+		frappe.realtime.on("shopify_item_sync_progress", function (data) {
+			if (data.store !== frm.doc.name) return;
+
+			renderProgress(data);
+
+			if (data.current_item && data.status === "running") {
+				logLines.push(`[${data.done}/${data.total}] ${data.current_item}`);
+				if (logLines.length > MAX_LOG) logLines.shift();
+				renderLog();
+			}
+
+			if (data.status === "done") {
+				frappe.realtime.off("shopify_item_sync_progress");
+				dialog.set_secondary_action_label(__("Close"));
+				frappe.show_alert({
+					message: __("Sync complete: {0} items, {1} errors", [data.total, data.errors]),
+					indicator: data.errors > 0 ? "orange" : "green",
+				});
+				frm.reload_doc();
+			}
+		});
+
+		dialog.show();
+		renderProgress({ total: 0, done: 0, errors: 0, current_item: "", status: "starting" });
+
+		// Kick off the sync
+		frm.call({
+			method: "sync_all_items",
+			doc: frm.doc,
+			freeze: false,
+		}).fail(function () {
+			frappe.realtime.off("shopify_item_sync_progress");
+			dialog.hide();
+		});
 	},
 
 	set_naming_series_options(frm) {

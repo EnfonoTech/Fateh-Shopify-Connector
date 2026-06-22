@@ -188,7 +188,7 @@ def sync_item_to_store(item_code: str, store_name: str, force: bool = False):
 
 	# Get auth details
 	api_version = store.api_version or DEFAULT_API_VERSION
-	access_token = store.get_password("access_token")
+	access_token = frappe.db.get_value("Shopify Store", store.name, "access_token")
 
 	if not access_token:
 		logger.error("Access token not configured for store %s", store_name)
@@ -1029,60 +1029,109 @@ def _sync_item_image_to_shopify(item, store, product_id: str, store_row, force: 
 		return None
 
 
-def sync_items_to_store(store_name: str):
+def sync_items_to_store(store_name: str, initiating_user: str | None = None):
 	"""
-	Sync all eligible items to a specific store.
+	Collect eligible items and enqueue a single orchestrator job for real-time tracking.
 
 	Called from manual "Sync All Items" button.
-
-	Args:
-		store_name: Shopify Store name
 	"""
 	logger = get_logger()
-	logger.info("Syncing all items to Shopify store: %s", store_name)
 	store: ShopifyStore = frappe.get_doc("Shopify Store", store_name)
 
 	if not store.enabled or not store.enable_item_sync:
-		logger.error("Shopify store: %s is not enabled or item sync is not enabled", store_name)
 		frappe.throw(_("Item sync is not enabled for this store"))
 
-	# Get all items that have this store in shopify_stores
 	items_with_store = frappe.get_all(
 		"Item Shopify Store", filters={"shopify_store": store_name, "enabled": 1}, pluck="parent"
 	)
 
-	# Also get items that match store filters but don't have explicit row
 	if store.item_filters:
-		# TODO: Optimize performance of this query and the logic
-		# Build filter query based on store filters
+		from fateh_shopify_connector.fateh_shopify_connector.utils import is_item_eligible_for_store
+
 		all_items = frappe.get_all("Item", filters={"disabled": 0}, pluck="name")
 		for item_code in all_items:
 			if item_code not in items_with_store:
 				item = frappe.get_doc("Item", item_code)
-				# Check if item matches filters (using existing utility)
-				from fateh_shopify_connector.fateh_shopify_connector.utils import is_item_eligible_for_store
-
 				if is_item_eligible_for_store(item, store):
 					items_with_store.append(item_code)
 
-	# Remove duplicates
 	items_to_sync = list(set(items_with_store))
 
 	if not items_to_sync:
 		frappe.msgprint(_("No items to sync for this store"))
 		return
 
-	# Enqueue sync jobs
-	for item_code in items_to_sync:
-		frappe.enqueue(
-			"fateh_shopify_connector.fateh_shopify_connector.product.sync_item_to_store",
-			queue="short",
-			timeout=300,
-			item_code=item_code,
-			store_name=store_name,
+	frappe.enqueue(
+		"fateh_shopify_connector.fateh_shopify_connector.product._sync_all_items_orchestrator",
+		queue="long",
+		timeout=7200,
+		job_id=f"sync_all_items_{store_name}",
+		deduplicate=True,
+		store_name=store_name,
+		item_codes=items_to_sync,
+		initiating_user=initiating_user or frappe.session.user,
+	)
+
+	logger.info("Queued orchestrator for %s items → store %s", len(items_to_sync), store_name)
+	return len(items_to_sync)
+
+
+def _sync_all_items_orchestrator(
+	store_name: str, item_codes: list, initiating_user: str | None = None
+):
+	"""
+	Background orchestrator: syncs items one by one and publishes real-time progress.
+
+	Publishes `shopify_item_sync_progress` events so the browser dialog updates live.
+	"""
+	logger = get_logger()
+	total = len(item_codes)
+	done = 0
+	errors = 0
+
+	def _publish(current_item="", status="running"):
+		frappe.publish_realtime(
+			"shopify_item_sync_progress",
+			{
+				"store": store_name,
+				"total": total,
+				"done": done,
+				"errors": errors,
+				"current_item": current_item,
+				"status": status,
+			},
+			user=initiating_user,
 		)
 
-	frappe.msgprint(
-		_("Queued {0} items for sync to {1}").format(len(items_to_sync), store_name), indicator="green"
+	_publish(status="running")
+
+	for item_code in item_codes:
+		_publish(current_item=item_code)
+		try:
+			sync_item_to_store(item_code, store_name)
+			done += 1
+		except Exception:
+			errors += 1
+			done += 1
+			logger.error("Failed to sync item %s to %s", item_code, store_name, exc_info=True)
+			frappe.log_error(
+				message=frappe.get_traceback(),
+				title=f"Item Sync Error — {item_code} → {store_name}",
+			)
+			frappe.db.commit()  # nosemgrep -- persist error log; continue with next item
+
+	_publish(status="done")
+
+	summary = (
+		f"Sync complete for {store_name}.<br>"
+		f"Total: {total} | Synced: {done - errors} | Errors: {errors}"
 	)
-	logger.info("Successfully queued %s items for sync to Shopify store: %s", len(items_to_sync), store_name)
+	from fateh_shopify_connector.fateh_shopify_connector.utils import create_shopify_log
+
+	create_shopify_log(
+		status="Success" if errors == 0 else "Warning",
+		method="sync_all_items",
+		shopify_store=store_name,
+		message=summary,
+	)
+	logger.info("Sync orchestrator complete: store=%s total=%d errors=%d", store_name, total, errors)

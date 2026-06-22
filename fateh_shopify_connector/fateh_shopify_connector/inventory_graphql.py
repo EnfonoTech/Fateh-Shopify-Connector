@@ -258,7 +258,6 @@ def set_inventory_batch(
 			"name": "available",
 			"reason": "correction",
 			"referenceDocumentUri": f"fateh://inventory-sync/{store_name}/{timestamp_iso}",
-			"ignoreCompareQuantity": True,
 			"quantities": graphql_quantities,
 		}
 	}

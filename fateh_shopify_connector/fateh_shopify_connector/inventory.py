@@ -146,7 +146,7 @@ def sync_store_inventory(store_name: str, force: bool = False):
 
 	# Get auth details
 	api_version = store.api_version or DEFAULT_API_VERSION
-	access_token = store.get_password("access_token")
+	access_token = frappe.db.get_value("Shopify Store", store.name, "access_token")
 
 	if not access_token:
 		frappe.log_error(
@@ -470,7 +470,7 @@ def sync_items_inventory(
 
 		_init_shopify_api_versions()
 		api_version = store.api_version or DEFAULT_API_VERSION
-		access_token = store.get_password("access_token")
+		access_token = frappe.db.get_value("Shopify Store", store.name, "access_token")
 		if not access_token:
 			create_shopify_log(
 				status="Error",
@@ -1101,7 +1101,7 @@ def sync_single_item_inventory(item_code: str, store_name: str | None = None):
 		_init_shopify_api_versions()
 
 		api_version = store.api_version or DEFAULT_API_VERSION
-		access_token = store.get_password("access_token")
+		access_token = frappe.db.get_value("Shopify Store", store.name, "access_token")
 		if not access_token:
 			# Token rotation or misconfiguration: loud error, not silent.
 			# If this silently drops, ERPNext and Shopify drift indefinitely.

@@ -602,7 +602,7 @@ def sync_new_orders(shopify_store: str, from_date=None, to_date=None) -> dict:
 	batch_count = 0
 
 	api_version = store.api_version or DEFAULT_API_VERSION
-	auth_details = (store.shop_domain, api_version, store.get_password("access_token"))
+	auth_details = (store.shop_domain, api_version, frappe.db.get_value("Shopify Store", store.name, "access_token"))
 
 	from shopify.collection import PaginatedIterator
 	from shopify.resources import Order
@@ -1631,7 +1631,7 @@ def _fetch_order_transactions(order_id, store) -> list[dict]:
 
 	try:
 
-		auth_details = (store.shop_domain, api_version, store.get_password("access_token"))
+		auth_details = (store.shop_domain, api_version, frappe.db.get_value("Shopify Store", store.name, "access_token"))
 		with Session.temp(*auth_details):
 			txns = Transaction.find(order_id=order_id)
 		result = [t.to_dict() for t in (txns or [])]

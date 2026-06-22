@@ -337,7 +337,13 @@ class ShopifyStore(Document):
 
 		from fateh_shopify_connector.fateh_shopify_connector.product import sync_items_to_store
 
-		sync_items_to_store(self.name)
+		count = sync_items_to_store(self.name, initiating_user=frappe.session.user)
+		if count:
+			frappe.msgprint(
+				_("Syncing {0} items to Shopify. Watch the live progress in the dialog.").format(count),
+				title=_("Item Sync Started"),
+				indicator="blue",
+			)
 
 	@frappe.whitelist()
 	def sync_inventory(self):

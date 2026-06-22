@@ -305,7 +305,7 @@ def register_webhooks(store: Document) -> list:
 	from shopify.session import Session
 
 	api_version = store.api_version or DEFAULT_API_VERSION
-	auth_details = (store.shop_domain, api_version, store.get_password("access_token"))
+	auth_details = (store.shop_domain, api_version, frappe.db.get_value("Shopify Store", store.name, "access_token"))
 
 	with Session.temp(*auth_details):
 		for topic in enabled_events:
@@ -336,7 +336,7 @@ def unregister_webhooks(store: Document) -> None:
 
 	url = get_current_domain_name()
 	api_version = store.api_version or DEFAULT_API_VERSION
-	auth_details = (store.shop_domain, api_version, store.get_password("access_token"))
+	auth_details = (store.shop_domain, api_version, frappe.db.get_value("Shopify Store", store.name, "access_token"))
 
 	with Session.temp(*auth_details):
 		for webhook in Webhook.find():
