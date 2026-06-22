@@ -218,27 +218,34 @@ def normalize_shop_domain(domain: str) -> str:
 
 def get_access_token(store: "Document") -> str:
 	"""
-	Get OAuth access token for the store.
+	Get access token for the store (OAuth or Legacy).
 
-	Token is stored by the oauth.callback() endpoint after successful authorization.
-
-	Args:
-		store: Shopify Store document
-
-	Returns:
-		Access token string
+	For OAuth stores, the token is written by oauth.callback() after authorization.
+	For Legacy stores, the token is the Access Token field entered manually.
 
 	Raises:
-		frappe.ValidationError: If token is missing (OAuth not yet authorized)
+		frappe.ValidationError: If token is missing
 	"""
-	access_token = store.get_password("access_token")
+	from frappe.utils.password import get_decrypted_password
+
+	access_token = get_decrypted_password(
+		store.doctype, store.name, "access_token", raise_exception=False
+	)
 
 	if not access_token:
-		frappe.throw(
-			_(
-				"OAuth not connected for store {0}. Please click 'Connect to Shopify' to authorize."
-			).format(store.name)
-		)
+		auth_method = store.get("auth_method") or "OAuth"
+		if auth_method == "Legacy (Access Token)":
+			frappe.throw(
+				_("Access Token is not set for store {0}. Please enter it in the Authentication section.").format(
+					store.name
+				)
+			)
+		else:
+			frappe.throw(
+				_("OAuth not connected for store {0}. Please click 'Connect to Shopify' under Actions to authorize.").format(
+					store.name
+				)
+			)
 
 	return access_token
 
