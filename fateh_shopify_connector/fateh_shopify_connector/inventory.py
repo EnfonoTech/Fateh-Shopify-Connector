@@ -1295,5 +1295,65 @@ def manual_inventory_sync(store_name: str):
 		force=True,
 	)
 
-	frappe.msgprint(_("Inventory sync has been queued for {0}").format(store_name), indicator="green")
+	frappe.msgprint(
+		_("Inventory sync queued for {0}. Results will appear in <b>Fateh Shopify Log</b> (see Connections section below).").format(store_name),
+		title=_("Inventory Sync Queued"),
+		indicator="green",
+	)
 	logger.info("Successfully queued inventory sync for Shopify store: %s", store_name)
+
+
+@frappe.whitelist()
+def manual_sync_item_inventory(item_code: str):
+	"""
+	Sync inventory for a single item to all eligible Shopify stores.
+
+	Called from the Item form "Sync Inventory to Shopify" button.
+	Returns a summary dict of results per store.
+	"""
+	logger = get_logger()
+
+	# Find all stores where this item has a mapped Shopify variant
+	store_rows = frappe.get_all(
+		"Item Shopify Store",
+		filters={"parent": item_code, "enabled": 1, "shopify_variant_id": ["!=", ""]},
+		fields=["shopify_store", "shopify_variant_id"],
+	)
+
+	if not store_rows:
+		frappe.throw(
+			_("Item {0} has no Shopify variant mapping. Run 'Sync to Shopify' first to create the product.").format(item_code)
+		)
+
+	results = []
+	for row in store_rows:
+		store_name = row.shopify_store
+		store = frappe.get_doc("Shopify Store", store_name)
+
+		if not store.enabled or not store.enable_inventory_sync:
+			results.append({"store": store_name, "status": "Skipped", "message": "Inventory sync not enabled"})
+			continue
+
+		if not store.warehouse_mapping:
+			results.append({"store": store_name, "status": "Skipped", "message": "No warehouse mappings"})
+			continue
+
+		try:
+			stats = sync_items_inventory(store_name, [item_code], source="manual_item")
+			if stats["errors"] > 0 and stats["synced"] == 0:
+				status = "Error"
+			elif stats["errors"] > 0:
+				status = "Warning"
+			else:
+				status = "Success"
+			results.append({
+				"store": store_name,
+				"status": status,
+				"message": f"Synced: {stats['synced']}, Errors: {stats['errors']}",
+			})
+			logger.info("Manual item inventory sync: %s → %s status=%s", item_code, store_name, status)
+		except Exception:
+			logger.error("Manual item inventory sync failed: %s → %s", item_code, store_name, exc_info=True)
+			results.append({"store": store_name, "status": "Error", "message": frappe.get_traceback()[:300]})
+
+	return results

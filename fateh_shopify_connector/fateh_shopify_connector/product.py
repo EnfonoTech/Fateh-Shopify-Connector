@@ -5,6 +5,7 @@ import base64
 import hashlib
 import json
 import os
+import time
 from typing import TYPE_CHECKING, Any
 
 import frappe
@@ -27,6 +28,38 @@ PRODUCT_STANDARD_FIELDS = ["body_html", "vendor", "product_type", "tags", "handl
 
 # Fields that go on the variant level
 VARIANT_STANDARD_FIELDS = ["price", "compare_at_price", "sku", "barcode", "weight", "weight_unit"]
+
+# Shopify REST API: leaky bucket 40 calls, refills at 2/s
+_SHOPIFY_RATE_LIMIT_MAX_RETRIES = 5
+_SHOPIFY_RATE_LIMIT_DEFAULT_WAIT = 5.0  # seconds to wait when no Retry-After header
+
+
+def _shopify_call_with_retry(fn, *args, **kwargs):
+	"""Call a Shopify REST API function, retrying on 429 rate-limit responses."""
+	logger = get_logger()
+	for attempt in range(_SHOPIFY_RATE_LIMIT_MAX_RETRIES):
+		try:
+			return fn(*args, **kwargs)
+		except Exception as exc:
+			# pyactiveresource wraps 429 as ClientError; check the response code
+			response = getattr(exc, "response", None)
+			code = getattr(response, "code", None)
+			if code == 429:
+				# Honour Retry-After header if present, else use default
+				headers = getattr(response, "headers", {}) or {}
+				retry_after = float(headers.get("retry-after") or _SHOPIFY_RATE_LIMIT_DEFAULT_WAIT)
+				wait = retry_after + 1.0  # add 1s buffer
+				logger.warning(
+					"Shopify 429 rate-limit on attempt %d/%d — waiting %.1fs",
+					attempt + 1,
+					_SHOPIFY_RATE_LIMIT_MAX_RETRIES,
+					wait,
+				)
+				time.sleep(wait)
+			else:
+				raise
+	# Final attempt (no except — let it propagate)
+	return fn(*args, **kwargs)
 
 
 def sync_item_to_shopify(doc, method=None):
@@ -307,7 +340,7 @@ def _find_shopify_product_by_sku(sku: str) -> tuple[str, str] | None:
 
 	logger = get_logger()
 	try:
-		variants = Variant.find(sku=sku, limit=1)
+		variants = _shopify_call_with_retry(Variant.find, sku=sku, limit=1)
 		if variants:
 			v = variants[0]
 			return str(v.product_id), str(v.id)
@@ -350,7 +383,7 @@ def _create_shopify_product(
 	for key, value in product_data.items():
 		setattr(product, key, value)
 
-	if not product.save():
+	if not _shopify_call_with_retry(product.save):
 		raise Exception(f"Failed to create product: {product.errors.full_messages()}")
 
 	# Update default variant with variant-level data (sku, price, inventory_management, etc.)
@@ -358,7 +391,7 @@ def _create_shopify_product(
 		default_variant = product.variants[0]
 		for key, value in variant_data.items():
 			setattr(default_variant, key, value)
-		if not default_variant.save():
+		if not _shopify_call_with_retry(default_variant.save):
 			logger.error("Failed to update default variant: %s", default_variant.errors.full_messages())
 			raise Exception(f"Failed to update variant: {default_variant.errors.full_messages()}")
 
@@ -410,22 +443,22 @@ def _update_shopify_product(
 	from shopify.resources import Metafield, Product, Variant
 
 	logger = get_logger()
-	product = Product.find(product_id)
+	product = _shopify_call_with_retry(Product.find, product_id)
 
 	# Update product fields
 	for key, value in product_data.items():
 		setattr(product, key, value)
 
-	if not product.save():
+	if not _shopify_call_with_retry(product.save):
 		logger.error("Failed to update product: %s", product.errors.full_messages())
 		raise Exception(f"Failed to update product: {product.errors.full_messages()}")
 
 	# Update variant if we have variant data
 	if variant_data and variant_id:
-		variant = Variant.find(variant_id, product_id=product_id)
+		variant = _shopify_call_with_retry(Variant.find, variant_id, product_id=product_id)
 		for key, value in variant_data.items():
 			setattr(variant, key, value)
-		if not variant.save():
+		if not _shopify_call_with_retry(variant.save):
 			logger.error("Failed to update variant: %s", variant.errors.full_messages())
 			raise Exception(f"Failed to update variant: {variant.errors.full_messages()}")
 	elif variant_data and product.variants:
@@ -433,13 +466,15 @@ def _update_shopify_product(
 		variant = product.variants[0]
 		for key, value in variant_data.items():
 			setattr(variant, key, value)
-		if not variant.save():
+		if not _shopify_call_with_retry(variant.save):
 			logger.error("Failed to update variant: %s", variant.errors.full_messages())
 			raise Exception(f"Failed to update variant: {variant.errors.full_messages()}")
 
 	# Update metafields
 	if metafields_data:
-		existing_metafields = Metafield.find(resource="products", resource_id=product_id)
+		existing_metafields = _shopify_call_with_retry(
+			Metafield.find, resource="products", resource_id=product_id
+		)
 		existing_map = {(mf.namespace, mf.key): mf for mf in existing_metafields}
 
 		for mf_data in metafields_data:
@@ -743,7 +778,7 @@ def _create_shopify_collection_and_mapping(store, collection_name: str) -> str |
 		# Create collection on Shopify
 		collection = CustomCollection()
 		collection.title = collection_name
-		if not collection.save():
+		if not _shopify_call_with_retry(collection.save):
 			frappe.log_error(
 				title=f"Collection Creation Error - {store.name}",
 				message=f"Failed to create collection '{collection_name}': {collection.errors.full_messages()}",
@@ -837,7 +872,7 @@ def _sync_product_collections(product_id: str, item, store, collections_field: s
 	from shopify.resources import Collect
 
 	try:
-		current_collects = Collect.find(product_id=product_id)
+		current_collects = _shopify_call_with_retry(Collect.find, product_id=product_id)
 	except Exception:
 		current_collects = []
 
@@ -849,7 +884,7 @@ def _sync_product_collections(product_id: str, item, store, collections_field: s
 			collect = Collect()
 			collect.product_id = int(product_id)
 			collect.collection_id = int(collection_id)
-			if not collect.save():
+			if not _shopify_call_with_retry(collect.save):
 				frappe.log_error(
 					title=f"Collection Sync Error - {store.name}",
 					message=f"Failed to add product {product_id} to collection {collection_id}: {collect.errors.full_messages()}",
@@ -866,7 +901,7 @@ def _sync_product_collections(product_id: str, item, store, collections_field: s
 		for collect in current_collects:
 			if str(collect.collection_id) == collection_id:
 				try:
-					collect.destroy()
+					_shopify_call_with_retry(collect.destroy)
 				except Exception as e:
 					frappe.log_error(
 						title=f"Collection Remove Warning - {store.name}",
@@ -1011,10 +1046,10 @@ def _sync_product_image(product_id: str, image_data: str, filename: str) -> bool
 
 	# Delete all existing images first (ignore 404 — may have been removed on Shopify)
 	try:
-		existing_images = Image.find(product_id=product_id)
+		existing_images = _shopify_call_with_retry(Image.find, product_id=product_id)
 		for img in existing_images:
 			try:
-				img.destroy()
+				_shopify_call_with_retry(img.destroy)
 			except Exception:
 				logger.warning("Could not delete image %s on product %s — skipping", img.id, product_id)
 	except Exception:
@@ -1026,7 +1061,7 @@ def _sync_product_image(product_id: str, image_data: str, filename: str) -> bool
 	image.attachment = image_data
 	image.filename = filename
 
-	if not image.save():
+	if not _shopify_call_with_retry(image.save):
 		logger.error("Failed to upload image for product %s: %s", product_id, image.errors.full_messages())
 		raise Exception(f"Failed to upload image for product {product_id}: {image.errors.full_messages()}")
 
@@ -1178,6 +1213,10 @@ def _sync_all_items_orchestrator(
 
 	_publish(status="running")
 
+	# Throttle: each item sync makes ~4-6 REST calls; stay well under 2 calls/second sustained.
+	# 1.5s between items ≈ 3 calls/s burst window, well within the 40-call leaky bucket.
+	_INTER_ITEM_DELAY = 1.5
+
 	for item_code in item_codes:
 		_publish(current_item=item_code)
 		try:
@@ -1192,6 +1231,7 @@ def _sync_all_items_orchestrator(
 				title=f"Item Sync Error — {item_code} → {store_name}",
 			)
 			frappe.db.commit()  # nosemgrep -- persist error log; continue with next item
+		time.sleep(_INTER_ITEM_DELAY)
 
 	_publish(status="done")
 
