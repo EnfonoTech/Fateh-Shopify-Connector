@@ -231,8 +231,6 @@ def callback():
 
 	logger.info("OAuth token exchange successful for store %s", shopify_store)
 
-	# Store the token directly on the Shopify Store document
-	# Using db_set to avoid triggering validation (which might clear OAuth fields)
 	store.db_set("access_token", access_token)
 	store.db_set("connected_user", frappe.session.user)
 	store.db_set("oauth_status", "Connected")

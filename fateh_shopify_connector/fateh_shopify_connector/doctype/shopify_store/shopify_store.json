@@ -122,7 +122,7 @@
   {
    "depends_on": "eval:doc.auth_method == 'Legacy (Access Token)'",
    "fieldname": "access_token",
-   "fieldtype": "Password",
+   "fieldtype": "Data",
    "label": "Access Token",
    "mandatory_depends_on": "eval:doc.auth_method == 'Legacy (Access Token)' && doc.enabled"
   },

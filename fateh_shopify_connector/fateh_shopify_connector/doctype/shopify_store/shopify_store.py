@@ -44,7 +44,7 @@ class ShopifyStore(Document):
 			ShopifyStoreWarehouseMapping,
 		)
 
-		access_token: DF.Password | None
+		access_token: DF.Data | None
 		add_shipping_as_item: DF.Check
 		api_version: DF.Data | None
 		auth_method: DF.Data
@@ -158,8 +158,9 @@ class ShopifyStore(Document):
 
 		if auth_method == "OAuth":
 			self.callback_url = get_callback_url()
-			# Clear legacy-only field
-			self.access_token = None
+			# Do NOT touch access_token here — it lives in Frappe's __Auth table,
+			# managed exclusively by oauth.callback() via update_password().
+			# Clearing it would wipe the token on every save.
 		else:
 			# Legacy (Access Token) — clear OAuth-specific fields
 			self.client_id = None
