@@ -221,24 +221,36 @@ def sync_item_to_store(item_code: str, store_name: str, force: bool = False):
 			if category_value:
 				product_data["product_category"] = {"product_taxonomy_node_id": str(category_value)}
 
-			if store_row and store_row.shopify_product_id:
-				# Update existing product
+			shopify_product_id = store_row.shopify_product_id if store_row else None
+			shopify_variant_id = store_row.shopify_variant_id if store_row else None
+
+			# If product_id is missing, search Shopify by SKU before creating
+			if not shopify_product_id:
+				existing = _find_shopify_product_by_sku(item_code)
+				if existing:
+					shopify_product_id, shopify_variant_id = existing
+					logger.info(
+						"Found existing Shopify product %s for SKU %s — will update",
+						shopify_product_id,
+						item_code,
+					)
+
+			if shopify_product_id:
 				logger.info(
 					"Updating existing product %s, item %s, store %s",
-					store_row.shopify_product_id,
+					shopify_product_id,
 					item_code,
 					store_name,
 				)
 				product = _update_shopify_product(
-					store_row.shopify_product_id,
-					store_row.shopify_variant_id,
+					shopify_product_id,
+					shopify_variant_id,
 					product_data,
 					variant_data,
 					metafields_data,
 				)
 			else:
-				# Create new product
-				logger.info("Creating new product %s, item %s, store %s", item_code, store_name)
+				logger.info("Creating new product for item %s, store %s", item_code, store_name)
 				product = _create_shopify_product(product_data, variant_data, metafields_data)
 
 			# Sync collections if mapping configured
@@ -283,12 +295,36 @@ def sync_item_to_store(item_code: str, store_name: str, force: bool = False):
 		raise
 
 
+def _find_shopify_product_by_sku(sku: str) -> tuple[str, str] | None:
+	"""Search Shopify for a product variant matching the given SKU.
+
+	Must be called inside an active Session.temp() context.
+
+	Returns:
+		(product_id, variant_id) strings if found, None otherwise.
+	"""
+	from shopify.resources import Variant
+
+	logger = get_logger()
+	try:
+		variants = Variant.find(sku=sku, limit=1)
+		if variants:
+			v = variants[0]
+			return str(v.product_id), str(v.id)
+	except Exception:
+		logger.warning("SKU lookup failed for %s", sku, exc_info=True)
+	return None
+
+
 def _init_shopify_api_versions():
-	"""Initialize Shopify API versions if not already loaded."""
+	"""Initialize Shopify API versions and set a sensible socket timeout."""
 	from shopify.api_version import ApiVersion
+	from shopify.base import ShopifyResource
 
 	if not ApiVersion.versions:
 		ApiVersion.fetch_known_versions()
+
+	ShopifyResource.timeout = 60  # seconds per API call
 
 
 def _create_shopify_product(
