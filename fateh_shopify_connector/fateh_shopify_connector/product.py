@@ -210,6 +210,7 @@ def _is_item_eligible_for_store_sql(item_code: str, store) -> bool:
 	return bool(frappe.get_all("Item", filters=frappe_filters, pluck="name", limit=1))
 
 
+@frappe.whitelist()
 def manual_sync_item_to_shopify(item_code: str):
 	"""
 	Manually trigger sync of item to all eligible Shopify stores.
