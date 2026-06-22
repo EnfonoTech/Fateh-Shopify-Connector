@@ -560,7 +560,11 @@ def build_product_payload(item, store) -> tuple:
 	Returns:
 		Tuple of (product_data, variant_data, metafields_data, category_value, collections_field)
 	"""
-	product_data = {"title": item.item_name or item.name}
+	description = getattr(item, "description", None) or ""
+	product_data = {
+		"title": item.item_name or item.name,
+		"body_html": description,
+	}
 	variant_data = {
 		"sku": item.item_code,
 	}
@@ -568,11 +572,16 @@ def build_product_payload(item, store) -> tuple:
 	category_value = None
 	collections_field = None
 
+	# Always include price from the store's price list (auto, no mapping required)
+	price = get_item_price(item, store)
+	if price is not None:
+		variant_data["price"] = str(price)
+
 	# Enable inventory tracking for stock items
 	if item.is_stock_item:
 		variant_data["inventory_management"] = "shopify"
 
-	# Process field mappings
+	# Process field mappings (explicit overrides auto price if user maps price manually)
 	for field_map in store.item_field_map:
 		erpnext_field = field_map.erpnext_field
 		field_type = field_map.shopify_field_type
@@ -995,22 +1004,23 @@ def _get_image_data_and_hash(item) -> tuple[str | None, str | None, str | None]:
 
 
 def _sync_product_image(product_id: str, image_data: str, filename: str) -> bool:
-	"""
-	Upload image to Shopify product using base64 attachment.
-
-	Args:
-		product_id: Shopify product ID
-		image_data: Base64 encoded image data
-		filename: Image filename
-
-	Returns:
-		True if successful, False otherwise
-	"""
+	"""Upload image to Shopify product, replacing any existing images."""
 	from shopify.resources import Image
 
 	logger = get_logger()
 
-	# Create new image
+	# Delete all existing images first (ignore 404 — may have been removed on Shopify)
+	try:
+		existing_images = Image.find(product_id=product_id)
+		for img in existing_images:
+			try:
+				img.destroy()
+			except Exception:
+				logger.warning("Could not delete image %s on product %s — skipping", img.id, product_id)
+	except Exception:
+		logger.warning("Could not fetch existing images for product %s — skipping cleanup", product_id)
+
+	# Upload new image
 	image = Image()
 	image.product_id = product_id
 	image.attachment = image_data
@@ -1019,12 +1029,6 @@ def _sync_product_image(product_id: str, image_data: str, filename: str) -> bool
 	if not image.save():
 		logger.error("Failed to upload image for product %s: %s", product_id, image.errors.full_messages())
 		raise Exception(f"Failed to upload image for product {product_id}: {image.errors.full_messages()}")
-
-	# Delete existing images to avoid duplicates, but skip the newly uploaded one
-	existing_images = Image.find(product_id=product_id)
-	for img in existing_images:
-		if img.id != image.id:
-			img.destroy()
 
 	return True
 
@@ -1065,9 +1069,47 @@ def _sync_item_image_to_shopify(item, store, product_id: str, store_row, force: 
 		return None
 
 
+def _collect_eligible_items(store) -> list[str]:
+	"""Collect all item codes eligible for this store using efficient DB queries."""
+	# Items explicitly linked with enabled=1
+	explicit_items = set(
+		frappe.get_all(
+			"Item Shopify Store",
+			filters={"shopify_store": store.name, "enabled": 1},
+			pluck="parent",
+		)
+	)
+
+	if not store.item_filters:
+		return list(explicit_items)
+
+	# Build frappe filters from store's item_filters rows (one DB query per set of conditions)
+	frappe_filters = {"disabled": 0}
+	for filter_row in store.item_filters:
+		field = filter_row.erpnext_field
+		ftype = filter_row.filter_type
+		value = filter_row.field_value or ""
+
+		if ftype == "Field Equals":
+			frappe_filters[field] = value
+		elif ftype == "Field In":
+			values = [v.strip() for v in value.split(",") if v.strip()]
+			if values:
+				frappe_filters[field] = ["in", values]
+		elif ftype == "Field Not In":
+			values = [v.strip() for v in value.split(",") if v.strip()]
+			if values:
+				frappe_filters[field] = ["not in", values]
+		elif ftype in ("Field Has Value", "Field Not Empty"):
+			frappe_filters[field] = ["is", "set"]
+
+	filter_items = set(frappe.get_all("Item", filters=frappe_filters, pluck="name"))
+	return list(explicit_items | filter_items)
+
+
 def sync_items_to_store(store_name: str, initiating_user: str | None = None):
 	"""
-	Collect eligible items and enqueue a single orchestrator job for real-time tracking.
+	Collect eligible items via DB query and enqueue a single orchestrator job.
 
 	Called from manual "Sync All Items" button.
 	"""
@@ -1077,35 +1119,30 @@ def sync_items_to_store(store_name: str, initiating_user: str | None = None):
 	if not store.enabled or not store.enable_item_sync:
 		frappe.throw(_("Item sync is not enabled for this store"))
 
-	items_with_store = frappe.get_all(
-		"Item Shopify Store", filters={"shopify_store": store_name, "enabled": 1}, pluck="parent"
-	)
-
-	if store.item_filters:
-		from fateh_shopify_connector.fateh_shopify_connector.utils import is_item_eligible_for_store
-
-		all_items = frappe.get_all("Item", filters={"disabled": 0}, pluck="name")
-		for item_code in all_items:
-			if item_code not in items_with_store:
-				item = frappe.get_doc("Item", item_code)
-				if is_item_eligible_for_store(item, store):
-					items_with_store.append(item_code)
-
-	items_to_sync = list(set(items_with_store))
+	items_to_sync = _collect_eligible_items(store)
 
 	if not items_to_sync:
-		frappe.msgprint(_("No items to sync for this store"))
-		return
+		frappe.msgprint(_("No items to sync for this store. Check Item Eligibility Filters."))
+		return 0
+
+	user = initiating_user or frappe.session.user
+
+	# Publish the total count immediately so the dialog shows real numbers
+	frappe.publish_realtime(
+		"shopify_item_sync_progress",
+		{"store": store_name, "total": len(items_to_sync), "done": 0, "errors": 0, "current_item": "", "status": "queued"},
+		user=user,
+	)
 
 	frappe.enqueue(
 		"fateh_shopify_connector.fateh_shopify_connector.product._sync_all_items_orchestrator",
 		queue="long",
 		timeout=7200,
-		job_id=f"sync_all_items_{store_name}",
-		deduplicate=True,
+		# Unique job_id per run — no silent deduplication drops
+		job_id=f"sync_all_items_{store_name}_{frappe.generate_hash(length=6)}",
 		store_name=store_name,
 		item_codes=items_to_sync,
-		initiating_user=initiating_user or frappe.session.user,
+		initiating_user=user,
 	)
 
 	logger.info("Queued orchestrator for %s items → store %s", len(items_to_sync), store_name)

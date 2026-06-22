@@ -496,6 +496,10 @@ frappe.ui.form.on("Shopify Store", {
 				logLines.push(`[${data.done}/${data.total}] ${data.current_item}`);
 				if (logLines.length > MAX_LOG) logLines.shift();
 				renderLog();
+			} else if (data.status === "queued") {
+				// Show total immediately — orchestrator not started yet
+				logLines.push(__("Queued {0} items for sync…", [data.total]));
+				renderLog();
 			}
 
 			if (data.status === "done") {
@@ -517,6 +521,13 @@ frappe.ui.form.on("Shopify Store", {
 			method: "sync_all_items",
 			doc: frm.doc,
 			freeze: false,
+			callback: function(r) {
+				if (r.message === 0 || r.message === undefined) {
+					// sync_all_items returned 0 items — nothing to sync
+					frappe.realtime.off("shopify_item_sync_progress");
+					dialog.hide();
+				}
+			},
 		}).fail(function () {
 			frappe.realtime.off("shopify_item_sync_progress");
 			dialog.hide();
