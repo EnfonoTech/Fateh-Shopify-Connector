@@ -211,13 +211,23 @@ def evaluate_filter(item: "Document", filter_row: "Document") -> bool:
 	if item_value is None and isinstance(item, dict):
 		item_value = item.get(field_name)
 
-	if filter_type == "Field Has Value" or filter_type == "Field Not Empty":
-		# Check if field has any value (not None, not empty string, not 0)
+	if filter_type in ("Field Has Value", "Field Not Empty"):
 		return bool(item_value)
 
 	elif filter_type == "Field Equals":
-		# Check if field equals specific value
 		return str(item_value) == str(filter_value) if item_value is not None else False
+
+	elif filter_type == "Field In":
+		if item_value is None:
+			return False
+		allowed = {v.strip() for v in (filter_value or "").split(",") if v.strip()}
+		return str(item_value) in allowed
+
+	elif filter_type == "Field Not In":
+		if item_value is None:
+			return True
+		excluded = {v.strip() for v in (filter_value or "").split(",") if v.strip()}
+		return str(item_value) not in excluded
 
 	return False
 

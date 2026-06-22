@@ -15,7 +15,7 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Filter Type",
-   "options": "Field Has Value\nField Equals\nField Not Empty",
+   "options": "Field Has Value\nField Equals\nField In\nField Not In\nField Not Empty",
    "reqd": 1
   },
   {
@@ -27,12 +27,12 @@
    "description": "Field on Item to check (e.g., custom_au_rrp_incl_gst)"
   },
   {
-   "depends_on": "eval:doc.filter_type=='Field Equals'",
+   "depends_on": "eval:['Field Equals','Field In','Field Not In'].includes(doc.filter_type)",
    "fieldname": "field_value",
    "fieldtype": "Data",
    "in_list_view": 1,
    "label": "Field Value",
-   "description": "Value to match (only for 'Field Equals' type)"
+   "description": "For 'Field Equals': exact value. For 'Field In': comma-separated values e.g. Electronics, Furniture"
   }
  ],
  "index_web_pages_for_search": 1,
