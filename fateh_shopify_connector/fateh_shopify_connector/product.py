@@ -165,37 +165,86 @@ def sync_item_price_to_shopify(doc, method=None):
 
 
 @frappe.whitelist()
+def _is_item_eligible_for_store_sql(item_code: str, store) -> bool:
+	"""
+	Check if a single item is eligible for a store using SQL (same logic as bulk sync).
+
+	Priority:
+	1. Explicit Item Shopify Store row with enabled=1 → eligible
+	2. Explicit Item Shopify Store row with enabled=0 → not eligible
+	3. Store item_filters match via SQL → eligible
+	4. No filters configured → not eligible
+	"""
+	# Check explicit override row
+	explicit = frappe.db.get_value(
+		"Item Shopify Store",
+		{"parent": item_code, "shopify_store": store.name},
+		"enabled",
+	)
+	if explicit is not None:
+		return bool(explicit)
+
+	# No explicit row — check via store filters (same SQL approach as _collect_eligible_items)
+	if not store.item_filters:
+		return False
+
+	frappe_filters = {"name": item_code, "disabled": 0}
+	for filter_row in store.item_filters:
+		field = filter_row.erpnext_field
+		ftype = filter_row.filter_type
+		value = filter_row.field_value or ""
+
+		if ftype == "Field Equals":
+			frappe_filters[field] = value
+		elif ftype == "Field In":
+			values = [v.strip() for v in value.split(",") if v.strip()]
+			if values:
+				frappe_filters[field] = ["in", values]
+		elif ftype == "Field Not In":
+			values = [v.strip() for v in value.split(",") if v.strip()]
+			if values:
+				frappe_filters[field] = ["not in", values]
+		elif ftype in ("Field Has Value", "Field Not Empty"):
+			frappe_filters[field] = ["is", "set"]
+
+	return bool(frappe.get_all("Item", filters=frappe_filters, pluck="name", limit=1))
+
+
 def manual_sync_item_to_shopify(item_code: str):
 	"""
-	Manually trigger sync of item to all configured Shopify stores.
+	Manually trigger sync of item to all eligible Shopify stores.
 
-	Called from Item form button. Forces sync regardless of change detection.
-
-	Args:
-		item_code: ERPNext Item code
+	Checks both explicit Item Shopify Store rows AND store item_filters (same
+	SQL logic as Sync All Items) so filter-matched items don't need a row first.
 	"""
-	item = frappe.get_doc("Item", item_code)
+	stores = frappe.get_all(
+		"Shopify Store", filters={"enabled": 1, "enable_item_sync": 1}, pluck="name"
+	)
+	if not stores:
+		frappe.throw(_("No Shopify stores with item sync enabled"))
 
-	if not item.shopify_stores:
-		frappe.throw(_("No Shopify stores configured for this item"))
+	eligible_store_names = []
+	for store_name in stores:
+		store = frappe.get_doc("Shopify Store", store_name)
+		if _is_item_eligible_for_store_sql(item_code, store):
+			eligible_store_names.append(store_name)
 
-	queued_count = 0
-	for store_row in item.shopify_stores:
-		if store_row.enabled:
-			frappe.enqueue(
-				"fateh_shopify_connector.fateh_shopify_connector.product.sync_item_to_store",
-				queue="short",
-				timeout=300,
-				item_code=item_code,
-				store_name=store_row.shopify_store,
-				force=True,  # Skip change detection for manual sync
-			)
-			queued_count += 1
+	if not eligible_store_names:
+		frappe.throw(
+			_("Item {0} does not match any store's eligibility filters. Add it manually via Item → Shopify Stores table, or check the store's Item Eligibility Filters.").format(item_code)
+		)
 
-	if queued_count == 0:
-		frappe.throw(_("No enabled Shopify stores found for this item"))
+	for store_name in eligible_store_names:
+		frappe.enqueue(
+			"fateh_shopify_connector.fateh_shopify_connector.product.sync_item_to_store",
+			queue="short",
+			timeout=300,
+			item_code=item_code,
+			store_name=store_name,
+			force=True,
+		)
 
-	return {"success": True, "queued_count": queued_count}
+	return {"success": True, "queued_count": len(eligible_store_names)}
 
 
 def sync_item_to_store(item_code: str, store_name: str, force: bool = False):
